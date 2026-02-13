@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compte rendu - Conseil de classe</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .gipe-warning {
+        color: #d32f2f;
+        background-color: #fdecea;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        font-weight: bold;
+        border: 1px solid #d32f2f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <div class="brand">
+          <img class="logo" src="assets/logo-academie.svg" alt="Logo academie" />
+          <div class="brand-text">
+            <div class="brand-title">ACADEMIE ORLEANS-TOURS</div>
+            <div class="brand-sub">Conseil de classe</div>
+          </div>
+        </div>
+        <div class="title">
+          <div class="title-main">COMPTE RENDU DES PARENTS DELEGUES</div>
+          <div class="title-sub" id="preview-title">Conseil de classe 3A</div>
+          <div class="title-sub" id="preview-term">Premier trimestre</div>
+          <div class="title-sub" id="header-date">-</div>
+        </div>
+        <div class="brand">
+          <img class="logo" src="assets/logo-parents.png" alt="Logo parents delegues" />
+          <div class="brand-text right">
+            <div class="brand-title">Parents delegues</div>
+            <div class="brand-sub">Etablissement</div>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel form-panel">
+          <div class="panel-header">
+            <h2>Saisie</h2>
+            <div class="actions-container">
+              <div class="gipe-warning">
+                ⚠️ Attention : Enregistrez bien en PDF pour l'envoi au GIPE.
+              </div>
+              <div class="actions">
+                <button class="btn" id="listing-eleves">Listing élèves</button>
+                <button class="btn" id="print-vierge">Listing Vierge</button>
+                <button class="btn primary" id="print">Imprimer / PDF</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Classe</span>
+              <select id="input-class"></select>
+            </label>
+            <label class="field">
+              <span>Periode / Trimestre</span>
+              <select id="input-term">
+                <option value="Premier trimestre">Premier trimestre</option>
+                <option value="Deuxieme trimestre">Deuxieme trimestre</option>
+                <option value="Troisieme trimestre">Troisieme trimestre</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Date du conseil</span>
+              <input type="date" id="input-date" />
+            </label>
+          </div>
+
+          <div class="section" style="display: none;">
+            <h3>Import CSV</h3>
+            <button type="button" id="load-sample">Recharger les donnees</button>
+          </div>
+
+          <div class="section">
+            <h3>Président(e) séance</h3>
+            <label class="field">
+              <span>Nom(s)</span>
+              <select id="input-principal"></select>
+            </label>
+          </div>
+
+          <div class="section">
+            <h3>Equipe pédagogique</h3>
+            <div class="table" id="subjects-form">
+              <div class="row header">
+                <div>Matiere</div>
+                <div>Professeur(s)</div>
+                <div>Present</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Participants</h3>
+            <label class="field">
+              <span>Parents delegues</span>
+              <textarea id="input-parents" rows="2" placeholder="Noms, un par ligne"></textarea>
+            </label>
+            <label class="field">
+              <span>Eleves delegues</span>
+              <textarea id="input-students" rows="2" placeholder="Noms, un par ligne"></textarea>
+            </label>
+            <label class="field">
+              <span>Autres (preciser)</span>
+              <textarea id="input-others" rows="2" placeholder="Noms, un par ligne"></textarea>
+            </label>
+          </div>
+
+          <div class="section">
+            <h3>Synthese (nombre)</h3>
+            <div class="field-grid six">
+              <label class="field"><span>Felicitations</span><input type="number" id="input-fel" min="0" /></label>
+              <label class="field"><span>Compliments</span><input type="number" id="input-comp" min="0" /></label>
+              <label class="field"><span>Encouragements</span><input type="number" id="input-enc" min="0" /></label>
+              <label class="field"><span>Av. comportement</span><input type="number" id="input-avc" min="0" /></label>
+              <label class="field"><span>Av. travail</span><input type="number" id="input-avt" min="0" /></label>
+              <label class="field"><span>Av. assiduite</span><input type="number" id="input-ava" min="0" /></label>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Observations generales</h3>
+            <label class="field">
+              <span>Par le principal ou adjoint</span>
+              <textarea id="input-obs-principal" rows="4"></textarea>
+            </label>
+            <label class="field">
+              <span>Par le professeur principal</span>
+              <textarea id="input-obs-pp" rows="4"></textarea>
+            </label>
+            <label class="field">
+              <span>Par les eleves delegues</span>
+              <textarea id="input-obs-eleves" rows="4"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel preview-panel" id="preview">
+          <div class="preview-header">
+            <div class="preview-left">
+              <div class="preview-label">PRÉSIDENT(E) SÉANCE</div>
+              <div class="preview-value" id="preview-principal">-</div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <div class="preview-table">
+              <div class="row header"><div>Matiere</div><div>Professeur(s)</div><div>Present</div></div>
+              <div id="subjects-preview"></div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <div class="preview-table compact">
+              <div class="row header"><div>Parents</div><div>Eleves</div><div>Autres</div></div>
+              <div class="row"><div class="lines" id="preview-parents">-</div><div class="lines" id="preview-students">-</div><div class="lines" id="preview-others">-</div></div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <div class="preview-table compact synthesis">
+                <div class="row header"><div>Fel.</div><div>Comp.</div><div>Enc.</div></div>
+                <div class="row"><div id="preview-fel">-</div><div id="preview-comp">-</div><div id="preview-enc">-</div></div>
+                <div class="row header"><div>Behav.</div><div>Work</div><div>Atten.</div></div>
+                <div class="row"><div id="preview-avc">-</div><div id="preview-avt">-</div><div id="preview-ava">-</div></div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <div class="preview-label">Observations</div>
+            <div class="preview-block"><div class="preview-block-title">Direction</div><div class="preview-text" id="preview-obs-principal">-</div></div>
+            <div class="preview-block"><div class="preview-block-title">Prof Principal</div><div class="preview-text" id="preview-obs-pp">-</div></div>
+            <div class="preview-block"><div class="preview-block-title">Eleves</div><div class="preview-text" id="preview-obs-eleves">-</div></div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
