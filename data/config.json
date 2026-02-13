@@ -1,0 +1,10 @@
+{
+  "principals": [
+    "M. DUPONT Jean",
+    "Mme MARTIN Sophie"
+  ],
+  "googleSheets": {
+    "apiKey": "AIzaSyCeKzsc5ILt8-FrY57anXB70GFySVJbC5Y",
+    "spreadsheetId": "1wPN30mcP5flPwo18xETIbscYYt1YTK05I_gwTFvPno0"
+  }
+}
