@@ -126,11 +126,6 @@ document.getElementById("listing-eleves").addEventListener("click", () => {
   window.open(`listing-eleves.html?classe=${encodeURIComponent(classe)}&trimestre=${encodeURIComponent(document.getElementById("input-term").value)}&date=${document.getElementById("input-date").value}`, '_blank');
 });
 
-document.getElementById("print-vierge").addEventListener("click", () => {
-  const classe = classSelect.value;
-  if(!classe) { alert("Sélectionnez une classe"); return; }
-  window.open(`listing-eleves.html?print=true&classe=${encodeURIComponent(classe)}&trimestre=${encodeURIComponent(document.getElementById("input-term").value)}&date=${document.getElementById("input-date").value}`, '_blank');
-});
 
 // --- CHARGEMENT ---
 
@@ -262,4 +257,5 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
 
