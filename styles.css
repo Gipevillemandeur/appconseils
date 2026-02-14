@@ -196,8 +196,6 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
-  font-size:16px;
-  transition: all 0.2s;
 }
 
 .table .row .presence-btn.present { background: #27ae60; color: #ffffff; }
@@ -308,6 +306,7 @@ body {
     background-color: #ffffff !important;
   }
 }
+
 
 
 
