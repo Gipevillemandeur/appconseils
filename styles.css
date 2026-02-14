@@ -1,948 +1,244 @@
 :root {
-
   --paper: #ffffff;
-
   --ink: #1b1f24;
-
   --muted: #5d6b7b;
-
   --accent: #1f6f8b;
-
   --accent-2: #f2a541;
-
   --line: #d6dde5;
-
   --bg: #f4f6f8;
-
 }
-
-
 
 * {
-
   box-sizing: border-box;
-
 }
-
-
 
 body {
-
   margin: 0;
-
   font-family: "Source Sans 3", "Segoe UI", Arial, sans-serif;
-
   background: radial-gradient(circle at top, #f7f2ea 0%, #f4f6f8 48%, #eef1f4 100%);
-
   color: var(--ink);
-
 }
-
-
 
 .app {
-
   padding: 24px;
-
   max-width: 1400px;
-
   margin: 0 auto;
-
 }
-
-
 
 .app-header {
-
   display: grid;
-
   grid-template-columns: 1fr 2fr 1fr;
-
   align-items: center;
-
   gap: 16px;
-
   background: var(--paper);
-
   border: 1px solid var(--line);
-
   border-radius: 16px;
-
   padding: 12px 20px;
-
   box-shadow: 0 10px 30px rgba(27, 31, 36, 0.08);
-
 }
-
-
 
 .print-header {
-
   display: none;
-
 }
-
-
-
-.print-header .brand:last-child {
-
-  margin-left: auto;
-
-}
-
-
 
 .brand {
-
   display: flex;
-
   align-items: center;
-
   gap: 12px;
-
 }
-
-
-
-.brand-text {
-
-  display: none;
-
-}
-
-
-
-.brand-text.right {
-
-  text-align: right;
-
-}
-
-
-
-.brand-title {
-
-  font-weight: 700;
-
-  color: var(--ink);
-
-}
-
-
 
 .logo {
-
   width: 100px;
-
   height: 100px;
-
   object-fit: contain;
-
 }
-
-
 
 .brand:first-child .logo {
-
   width: 150px;
-
   height: 150px;
-
 }
-
-
-
-.app-header .brand:last-child {
-
-  margin-left: auto;
-
-}
-
-
 
 .title {
-
   text-align: center;
-
 }
-
-
 
 .title-main {
-
   font-weight: 700;
-
   font-size: 20px;
-
   text-transform: uppercase;
-
   letter-spacing: 0.08em;
-
 }
-
-
 
 .title-sub {
-
   color: var(--muted);
-
   font-weight: 600;
-
   margin-top: 4px;
-
 }
-
-
 
 .grid {
-
   display: grid;
-
   grid-template-columns: 1fr 1fr;
-
   gap: 20px;
-
   margin-top: 20px;
-
 }
-
-
 
 .panel {
-
   background: var(--paper);
-
   border: 1px solid var(--line);
-
   border-radius: 16px;
-
   padding: 18px;
-
   box-shadow: 0 8px 24px rgba(27, 31, 36, 0.06);
-
 }
 
+/* --- COULEURS DES PANNEAUX (TA DEMANDE) --- */
 
-
-.panel-header {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  gap: 12px;
-
-}
-
-
-
-.panel-header h2 {
-
-  margin: 0;
-
-}
-
-
-
-.actions {
-
-  display: flex;
-
-  gap: 10px;
-
-}
-
-
-
-.btn {
-
-  border: 1px solid var(--line);
-
-  padding: 8px 12px;
-
-  border-radius: 10px;
-
-  background: var(--paper);
-
-  color: var(--ink);
-
-  cursor: pointer;
-
-  font-weight: 600;
-
-}
-
-
-
-.btn.primary {
-
-  background: var(--accent);
-
-  border-color: var(--accent);
-
-  color: #ffffff;
-
-}
-
-
-
-.field-grid {
-
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  gap: 12px;
-
-  margin-top: 12px;
-
-}
-
-
-
-.field-grid.three {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.field-grid.six {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.field {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 6px;
-
-  font-size: 13px;
-
-  color: var(--muted);
-
-}
-
-
-
-.field input,
-
-.field textarea,
-
-.field select {
-
-  border: 1px solid var(--line);
-
-  border-radius: 10px;
-
-  padding: 8px 10px;
-
-  font-size: 14px;
-
-  font-family: inherit;
-
-}
-
-
-
-.hint {
-
-  font-size: 12px;
-
-  color: var(--muted);
-
-  margin-top: 6px;
-
-}
-
-
-
-.section {
-
-  margin-top: 18px;
-
-}
-
-
-
-.section h3 {
-
-  margin: 0 0 10px;
-
-}
-
-
-
-.table {
-
-  display: grid;
-
-  gap: 8px;
-
-}
-
-
-
-.table .row {
-
-  display: grid;
-
-  grid-template-columns: 1.2fr 1.4fr 0.6fr;
-
-  gap: 8px;
-
-  align-items: center;
-
-}
-
-
-
-.table .row.header {
-
-  font-size: 12px;
-
-  color: var(--muted);
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.04em;
-
-}
-
-
-
-.table .row input,
-
-.table .row select {
-
-  width: 100%;
-
-}
-
-
-
-.table .row .remove {
-
-  border: none;
-
-  background: #e74c3c;
-
-  color: #ffffff;
-
-  padding: 6px 8px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-weight: 700;
-
-}
-
-
-
-.table .row .presence-btn {
-
-  border: none;
-
-  padding: 6px 12px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-weight: 700;
-
-  font-size: 16px;
-
-  transition: all 0.2s;
-
-}
-
-
-
-.table .row .presence-btn.present {
-
-  background: #27ae60;
-
-  color: #ffffff;
-
-}
-
-
-
-.table .row .presence-btn.absent {
-
-  background: #e74c3c;
-
-  color: #ffffff;
-
-}
-
-
-
-.preview-panel {
-
-  position: relative;
-
-}
-
-
-
-.preview-header {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 12px;
-
-  border-bottom: 1px solid var(--line);
-
-  padding-bottom: 12px;
-
-}
-
-
-
-.preview-label {
-
-  font-size: 12px;
-
-  text-transform: uppercase;
-
-  color: var(--muted);
-
-  letter-spacing: 0.06em;
-
-}
-
-
-
-.preview-value {
-
-  margin-top: 6px;
-
-  font-weight: 600;
-
-}
-
-
-
-.preview-section {
-
-  margin-top: 16px;
-
-}
-
-
-
-.preview-table {
-
-  border: 1px solid var(--line);
-
-  border-radius: 12px;
-
-  overflow: hidden;
-
-}
-
-
-
-.preview-table .row {
-
-  display: grid;
-
-  grid-template-columns: 1.2fr 1.4fr 0.6fr;
-
-  gap: 0;
-
-}
-
-
-
-.preview-table .row.header {
-
-  background: #f0f4f7;
-
-  font-size: 12px;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.05em;
-
-  color: var(--muted);
-
-}
-
-
-
-.preview-table .row > div {
-
-  padding: 8px 10px;
-
-  border-right: 1px solid var(--line);
-
-  border-top: 1px solid var(--line);
-
-  min-height: 32px;
-
-}
-
-
-
-.preview-table .row > div:last-child {
-
-  border-right: none;
-
-}
-
-
-
-.preview-table .row.header > div {
-
-  border-top: none;
-
-}
-
-
-
-.preview-table.compact .row {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.preview-table.compact .row.header {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.preview-table.compact .row.header + .row {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.preview-table.compact .row.header + .row > div {
-
-  min-height: 48px;
-
-}
-
-
-
-.preview-table.compact .row.header {
-
-  background: #f6f2ec;
-
-}
-
-
-
-.preview-table.synthesis .row {
-
-  grid-template-columns: repeat(3, 1fr);
-
-}
-
-
-
-.preview-table.synthesis .row.header {
-
-  background: #f0f4f7;
-
-}
-
-
-
-.preview-table.synthesis .row:not(.header) > div {
-
-  min-height: 36px;
-
-  text-align: center;
-
-  font-weight: 600;
-
-}
-
-
-
-.preview-table.compact .row.header + .row {
-
-  background: #ffffff;
-
-}
-
-
-
-.preview-table.compact .row.header + .row > div {
-
-  font-size: 13px;
-
-}
-
-
-
-.preview-table.compact .row.header + .row .lines {
-
-  white-space: pre-line;
-
-}
-
-
-
-.preview-block {
-
-  border: 1px solid var(--line);
-
-  border-radius: 12px;
-
-  padding: 10px 12px;
-
-  margin-top: 10px;
-
-}
-
-
-
-.preview-block-title {
-
-  font-weight: 600;
-
-  color: var(--muted);
-
-  font-size: 13px;
-
-}
-
-
-
-.preview-text {
-
-  margin-top: 6px;
-
-  white-space: pre-line;
-
-  min-height: 60px;
-
-}
-
-
-
-/* AJOUTE LE CODE ICI (POUR L'ÉCRAN) */
-
-#input-principal {
-
-  width: 250px; /* J'ai mis 250px pour que les noms longs ne soient pas coupés */
-
-  max-width: 100%;
-
-}
-
-
-
-.field-grid .field:has(#input-principal) {
-
-  width: fit-content;
-
-}
-
-
-
-/* ENSUITE LES RÈGLES SPÉCIALES ÉCRAN MOBILE */
-
-@media (max-width: 1000px) {
-
-  .grid {
-
-    grid-template-columns: 1fr;
-
-  }
-
-}
-
-
-
-@media (max-width: 1000px) {
-
-  .grid {
-
-    grid-template-columns: 1fr;
-
-  }
-
-}
-
-
-
-@media print {
-
-  body {
-
-    background: #ffffff;
-
-  }
-
-
-
-  .form-panel,
-
-  .actions {
-
-    display: none !important;
-
-  }
-
-
-
-  .app {
-
-    padding: 0;
-
-  }
-
-
-
-  .app-header,
-
-  .panel {
-
-    border: none;
-
-    box-shadow: none;
-
-  }
-
-
-
-  .print-header {
-
-    display: grid;
-
-    page-break-before: always;
-
-    margin-top: 12px;
-
-  }
-
-
-
-  .grid {
-
-    grid-template-columns: 1fr;
-
-  }
-
-
-
-  .preview-table {
-
-    page-break-inside: avoid;
-
-    font-size: 13px;
-
-  }
-
-
-
-  .preview-table .row > div {
-
-    padding: 6px 8px;
-
-  }
-
-
-
-  .preview-section {
-
-    page-break-inside: avoid;
-
-  }
-
-
-
-  /* Limite hauteur tableau professeurs pour 15-16 matières max sur page 1 */
-
-  .preview-section:first-of-type {
-
-    max-height: 620px;
-
-    overflow: hidden;
-
-  }
-
-
-
-  /* Participants reste en bas de page 1 */
-
-  .preview-section:nth-of-type(2) {
-
-    page-break-before: avoid;
-
-  }
-
-
-
-  .app-header {
-
-    page-break-after: avoid;
-
-  }
-  /* 1. On colorie le panneau de GAUCHE (Saisie) en jaune-orange clair */
+/* 1. Saisie à gauche : Jaune-Orange très clair */
 .grid > .panel:first-of-type {
   background-color: #fff9e6 !important;
+  border-color: #ffe58f;
 }
 
-/* 2. On colorie le fond du panneau de DROITE (Récap) en gris */
+/* 2. Récap à droite : Fond gris bureau */
 .grid > .panel.preview-panel {
-  background-color: #e9ecef !important; /* Gris bureau */
-  padding: 30px !important; /* On donne un peu d'air autour de la feuille */
+  background-color: #e9ecef !important;
 }
 
-/* 3. On crée l'effet "Feuille Blanche" uniquement sur le contenu du récap */
-/* On cible les éléments internes de la preview pour les mettre sur blanc */
+/* 3. Effet "Feuille Blanche" sur les blocs de droite sans les déformer */
 .preview-header, 
 .preview-section, 
 .preview-block {
   background-color: white !important;
   padding: 15px !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--line) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
   margin-bottom: 15px !important;
 }
 
-/* 4. SECURITÉ IMPRESSION : On remet tout en blanc pur */
-@media print {
-  .grid > .panel:first-of-type {
-    display: none !important; /* Cache la saisie */
-  }
-  .grid > .panel.preview-panel,
-  .preview-header, 
-  .preview-section, 
-  .preview-block {
-    background-color: white !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    margin-bottom: 10px !important;
-  }
+/* --- FIN COULEURS --- */
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
+.actions {
+  display: flex;
+  gap: 10px;
+}
 
+.btn {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 600;
+}
 
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.field input, .field textarea, .field select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.table .row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.6fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.table .row.header {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.preview-table {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.preview-table .row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.6fr;
+  gap: 0;
+}
+
+.preview-table .row > div {
+  padding: 8px 10px;
+  border-right: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  min-height: 32px;
+}
+
+.preview-table .row.header {
+  background: #f0f4f7;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#input-principal {
+  width: 250px;
+  max-width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* --- GESTION IMPRESSION --- */
+@media print {
+  body { background: #ffffff !important; }
+  
+  .grid > .panel:first-of-type, .actions {
+    display: none !important;
+  }
+
+  .grid { grid-template-columns: 1fr; border: none; }
+
+  .grid > .panel.preview-panel {
+    background-color: white !important;
+    padding: 0 !important;
+  }
+
+  .preview-header, .preview-section, .preview-block {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .preview-table { border-radius: 0; }
+}
