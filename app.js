@@ -137,9 +137,19 @@ async function loadConfig() {
   try {
     const response = await fetch("data/config.json");
     config = await response.json();
-    setPrincipalOptions(config.principals || []);
-    if (config.googleSheets?.apiKey) loadGoogleSheets();
-  } catch (err) { console.error(err); }
+    
+    // COMMENTE OU SUPPRIME CETTE LIGNE CI-DESSOUS :
+    // setPrincipalOptions(config.principals || []); 
+    
+    // À la place, on met juste un "Sélectionner" vide en attendant Google
+    principalSelect.innerHTML = '<option value="">Chargement...</option>';
+
+    if (config.googleSheets?.apiKey) {
+        loadGoogleSheets();
+    }
+  } catch (err) { 
+    console.error(err); 
+  }
 }
 
 async function loadGoogleSheets() {
@@ -199,3 +209,4 @@ classSelect.addEventListener("change", (e) => applyClassSubjects(e.target.value)
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 
 loadConfig();
+
