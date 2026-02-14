@@ -3,6 +3,9 @@ const subjectPreview = document.getElementById("subjects-preview");
 const classSelect = document.getElementById("input-class");
 const loadSampleBtn = document.getElementById("load-sample");
 const principalSelect = document.getElementById("input-principal");
+const modal = document.getElementById("help-modal");
+const btn = document.getElementById("open-help");
+const span = document.getElementsByClassName("close-btn")[0];
 
 let csvData = {};
 let classCodes = {};
@@ -218,6 +221,16 @@ function setPrincipalOptions(principals) {
     principalSelect.appendChild(opt);
   });
 }
+// Ouvre la fenêtre aide
+btn.onclick = () => modal.style.display = "block";
+
+// Ferme la fenêtre avec la croix
+span.onclick = () => modal.style.display = "none";
+
+// Ferme la fenêtre si on clique n'importe où à côté
+window.onclick = (event) => {
+  if (event.target == modal) modal.style.display = "none";
+}
 
 // --- GESTION DU VERROUILLAGE AU CHANGEMENT DE CLASSE ---
 classSelect.addEventListener("change", (e) => {
@@ -260,6 +273,7 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
 
 
 
