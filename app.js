@@ -3,10 +3,8 @@ const subjectPreview = document.getElementById("subjects-preview");
 const classSelect = document.getElementById("input-class");
 const loadSampleBtn = document.getElementById("load-sample");
 const principalSelect = document.getElementById("input-principal");
-const modal = document.getElementById("help-modal");
-const btn = document.getElementById("open-help");
-const span = document.getElementsByClassName("close-btn")[0];
 
+// On ne branche pas les boutons d'aide ici pour éviter de bloquer le démarrage
 let csvData = {};
 let classCodes = {};
 let config = { principals: [] };
@@ -137,13 +135,7 @@ async function loadConfig() {
   try {
     const response = await fetch("data/config.json");
     config = await response.json();
-    
-    // COMMENTE OU SUPPRIME CETTE LIGNE CI-DESSOUS :
-    // setPrincipalOptions(config.principals || []); 
-    
-    // À la place, on met juste un "Sélectionner" vide en attendant Google
     principalSelect.innerHTML = '<option value="">Chargement...</option>';
-
     if (config.googleSheets?.apiKey) {
         loadGoogleSheets();
     }
@@ -165,13 +157,11 @@ async function loadGoogleSheets() {
     for (const sheet of metaData.sheets || []) {
         const name = sheet.properties.title;
 
-        // --- 1. LECTURE DE TES CODES ---
         if(name.toLowerCase() === "code classe") {
             const codesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:B?key=${apiKey}`;
             const codesResp = await fetch(codesUrl);
             const codesJson = await codesResp.json();
             if (codesJson.values) {
-                // On remplit l'objet classCodes (on saute la ligne 1 avec slice(1))
                 codesJson.values.slice(1).forEach(row => {
                     if(row[0]) classCodes[row[0]] = row[1]; 
                 });
@@ -179,7 +169,6 @@ async function loadGoogleSheets() {
             continue; 
         }
 
-        // --- 2. DIRECTION ---
         if(name.toLowerCase() === "direction") {
             const dirUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:A?key=${apiKey}`;
             const dirResp = await fetch(dirUrl);
@@ -191,7 +180,6 @@ async function loadGoogleSheets() {
             continue;
         }
 
-        // --- 3. LES CLASSES ---
         classes.push(name);
         const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:C?key=${apiKey}`;
         const resp = await fetch(dataUrl);
@@ -221,39 +209,37 @@ function setPrincipalOptions(principals) {
     principalSelect.appendChild(opt);
   });
 }
-// Ouvre la fenêtre aide
-btn.onclick = () => modal.style.display = "block";
 
-// Ferme la fenêtre avec la croix
-span.onclick = () => modal.style.display = "none";
+// --- PROTECTION DU SYSTÈME D'AIDE (Ne bloque plus le reste) ---
+window.addEventListener('load', () => {
+    const helpModal = document.getElementById("help-modal");
+    const helpBtn = document.getElementById("open-help");
+    const helpSpan = document.querySelector(".close-btn");
 
-// Ferme la fenêtre si on clique n'importe où à côté
-window.onclick = (event) => {
-  if (event.target == modal) modal.style.display = "none";
-}
+    if (helpBtn && helpModal && helpSpan) {
+        helpBtn.onclick = () => { helpModal.style.display = "block"; };
+        helpSpan.onclick = () => { helpModal.style.display = "none"; };
+        window.onclick = (event) => {
+            if (event.target == helpModal) helpModal.style.display = "none";
+        };
+    }
+});
 
-// --- GESTION DU VERROUILLAGE AU CHANGEMENT DE CLASSE ---
+// --- GESTION DU VERROUILLAGE ---
 classSelect.addEventListener("change", (e) => {
     const classe = e.target.value;
-    if (!classe) {
-        applyClassSubjects("");
-        return;
-    }
+    if (!classe) { applyClassSubjects(""); return; }
 
-    // On récupère le code et on enlève les espaces (s'il n'y a rien, ça devient null)
     const codeRaw = classCodes[classe];
     const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
     
-    // 1. On vérifie si la classe est déjà déverrouillée (Session)
     if (sessionStorage.getItem(`access_${classe}`) === "granted") {
         applyClassSubjects(classe);
         return;
     }
 
-    // 2. Si un code VALIDE et NON VIDE existe, on le demande
     if (codeAttendu !== null) {
         const codeSaisi = prompt(`Accès sécurisé GIPE. Veuillez entrer le code pour la classe ${classe} :`);
-        
         if (codeSaisi === codeAttendu) {
             sessionStorage.setItem(`access_${classe}`, "granted");
             applyClassSubjects(classe);
@@ -262,19 +248,11 @@ classSelect.addEventListener("change", (e) => {
             classSelect.value = ""; 
             applyClassSubjects("");
         }
-    } 
-    // 3. Si le code est vide dans Excel ou si la classe n'est pas dans la liste
-    else {
-        alert("ERREUR : Aucun code de déverrouillage n'a été configuré pour la classe " + classe + ". L'accès est bloqué par sécurité.");
-        classSelect.value = "";
-        applyClassSubjects("");
+    } else {
+        alert("ERREUR : Aucun code configuré pour la classe " + classe);
+        classSelect.value = ""; applyClassSubjects("");
     }
 });
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
-
-
-
-
-
