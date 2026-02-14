@@ -47,6 +47,15 @@ body {
   gap: 12px;
 }
 
+.brand-text {
+  display: none;
+}
+
+.brand-title {
+  font-weight: 700;
+  color: var(--ink);
+}
+
 .logo {
   width: 100px;
   height: 100px;
@@ -90,38 +99,15 @@ body {
   box-shadow: 0 8px 24px rgba(27, 31, 36, 0.06);
 }
 
-/* --- COULEURS DES PANNEAUX (TA DEMANDE) --- */
-
-/* 1. Saisie à gauche : Jaune-Orange très clair */
-.grid > .panel:first-of-type {
-  background-color: #fff9e6 !important;
-  border-color: #ffe58f;
-}
-
-/* 2. Récap à droite : Fond gris bureau */
-.grid > .panel.preview-panel {
-  background-color: #e9ecef !important;
-}
-
-/* 3. Effet "Feuille Blanche" sur les blocs de droite sans les déformer */
-.preview-header, 
-.preview-section, 
-.preview-block {
-  background-color: white !important;
-  padding: 15px !important;
-  border-radius: 12px !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
-  margin-bottom: 15px !important;
-}
-
-/* --- FIN COULEURS --- */
-
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
 }
 
 .actions {
@@ -152,6 +138,10 @@ body {
   margin-top: 12px;
 }
 
+.field-grid.three, .field-grid.six {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -168,31 +158,107 @@ body {
   font-family: inherit;
 }
 
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.section {
+  margin-top: 18px;
+}
+
+.section h3 {
+  margin: 0 0 10px;
+}
+
+.table {
+  display: grid;
+  gap: 8px;
+}
+
 .table .row {
   display: grid;
   grid-template-columns: 1.2fr 1.4fr 0.6fr;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
 }
 
 .table .row.header {
   font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table .row .remove {
+  border: none;
+  background: #e74c3c;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.table .row .presence-btn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.table .row .presence-btn.present { background: #27ae60; color: #ffffff; }
+.table .row .presence-btn.absent { background: #e74c3c; color: #ffffff; }
+
+.preview-panel {
+  position: relative;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.preview-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.preview-value {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.preview-section {
+  margin-top: 16px;
 }
 
 .preview-table {
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  background: white;
 }
 
 .preview-table .row {
   display: grid;
   grid-template-columns: 1.2fr 1.4fr 0.6fr;
   gap: 0;
+}
+
+.preview-table .row.header {
+  background: #f0f4f7;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .preview-table .row > div {
@@ -202,11 +268,36 @@ body {
   min-height: 32px;
 }
 
-.preview-table .row.header {
-  background: #f0f4f7;
-  font-size: 12px;
-  text-transform: uppercase;
+.preview-table .row > div:last-child { border-right: none; }
+.preview-table .row.header > div { border-top: none; }
+
+.preview-table.compact .row, 
+.preview-table.compact .row.header,
+.preview-table.synthesis .row {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.preview-table.compact .row.header { background: #f6f2ec; }
+.preview-table.compact .row.header + .row { background: #ffffff; font-size: 13px; }
+.preview-table.compact .row.header + .row > div { min-height: 48px; }
+
+.preview-block {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.preview-block-title {
+  font-weight: 600;
   color: var(--muted);
+  font-size: 13px;
+}
+
+.preview-text {
+  margin-top: 6px;
+  white-space: pre-line;
+  min-height: 60px;
 }
 
 #input-principal {
@@ -218,55 +309,33 @@ body {
   .grid { grid-template-columns: 1fr; }
 }
 
-/* --- GESTION IMPRESSION --- */
 @media print {
-  /* 1. On force le fond en blanc pur pour économiser l'encre */
-  body {
-    background: #ffffff !important;
-  }
+  body { background: #ffffff; }
+  .form-panel, .actions { display: none !important; }
+  .app { padding: 0; }
+  .app-header, .panel { border: none; box-shadow: none; }
+  .print-header { display: grid; page-break-before: always; margin-top: 12px; }
+  .grid { grid-template-columns: 1fr; }
+  .preview-table { page-break-inside: avoid; font-size: 13px; }
+  .preview-table .row > div { padding: 6px 8px; }
+  .preview-section { page-break-inside: avoid; }
+  .preview-section:first-of-type { max-height: 620px; overflow: hidden; }
+  .app-header { page-break-after: avoid; }
+}
 
-  /* 2. On cache la saisie et les headers d'app */
-  .grid > .panel:first-of-type, 
-  .app-header, 
-  .actions,
-  .guide-conteneur {
-    display: none !important;
+/* --- COULEURS DES PANNEAUX (AJOUT FINAL) --- */
+@media screen {
+  .grid > .panel:nth-child(1) {
+    background-color: #fff9e6 !important;
   }
-
-  /* 3. On remet la grille à plat pour le PDF */
-  .grid {
-    display: block !important;
-    border: none !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* 4. RESET TOTAL de la zone de droite : on enlève le gris et les fiches */
-  .grid > .panel.preview-panel {
-    background-color: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    display: block !important;
-  }
-
-  /* 5. On retire TOUS les styles de "fiches" que j'avais ajoutés */
-  .preview-header, 
-  .preview-section, 
-  .preview-block {
-    background-color: transparent !important;
-    padding: 0 !important;
-    margin: 0 0 10px 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-  }
-
-  /* 6. On s'assure que tes tableaux reprennent leur place */
-  .preview-table {
-    width: 100% !important;
-    page-break-inside: avoid;
+  .grid > .panel:nth-child(2) {
+    background-color: #e9ecef !important;
   }
 }
+
+@media print {
+  .grid > .panel {
+    background-color: #ffffff !important;
+  }
+}
+
