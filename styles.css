@@ -220,25 +220,53 @@ body {
 
 /* --- GESTION IMPRESSION --- */
 @media print {
-  body { background: #ffffff !important; }
-  
-  .grid > .panel:first-of-type, .actions {
+  /* 1. On force le fond en blanc pur pour économiser l'encre */
+  body {
+    background: #ffffff !important;
+  }
+
+  /* 2. On cache la saisie et les headers d'app */
+  .grid > .panel:first-of-type, 
+  .app-header, 
+  .actions,
+  .guide-conteneur {
     display: none !important;
   }
 
-  .grid { grid-template-columns: 1fr; border: none; }
-
-  .grid > .panel.preview-panel {
-    background-color: white !important;
-    padding: 0 !important;
-  }
-
-  .preview-header, .preview-section, .preview-block {
-    box-shadow: none !important;
+  /* 3. On remet la grille à plat pour le PDF */
+  .grid {
+    display: block !important;
     border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
     padding: 0 !important;
-    margin-bottom: 10px !important;
   }
 
-  .preview-table { border-radius: 0; }
+  /* 4. RESET TOTAL de la zone de droite : on enlève le gris et les fiches */
+  .grid > .panel.preview-panel {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  /* 5. On retire TOUS les styles de "fiches" que j'avais ajoutés */
+  .preview-header, 
+  .preview-section, 
+  .preview-block {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 0 10px 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* 6. On s'assure que tes tableaux reprennent leur place */
+  .preview-table {
+    width: 100% !important;
+    page-break-inside: avoid;
+  }
 }
