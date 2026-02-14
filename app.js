@@ -5,6 +5,7 @@ const loadSampleBtn = document.getElementById("load-sample");
 const principalSelect = document.getElementById("input-principal");
 
 let csvData = {};
+let classCodes = {};
 let config = { principals: [] };
 
 function formatDate(value) {
@@ -158,25 +159,40 @@ async function loadGoogleSheets() {
     const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`;
     const metaResponse = await fetch(metaUrl);
     const metaData = await metaResponse.json();
+    
     csvData = {};
     const classes = [];
+
     for (const sheet of metaData.sheets || []) {
         const name = sheet.properties.title;
 
-        // --- NOUVEAU BLOC POUR LA DIRECTION ---
+        // --- 1. LECTURE DE TES CODES ---
+        if(name.toLowerCase() === "code classe") {
+            const codesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:B?key=${apiKey}`;
+            const codesResp = await fetch(codesUrl);
+            const codesJson = await codesResp.json();
+            if (codesJson.values) {
+                // On remplit l'objet classCodes (on saute la ligne 1 avec slice(1))
+                codesJson.values.slice(1).forEach(row => {
+                    if(row[0]) classCodes[row[0]] = row[1]; 
+                });
+            }
+            continue; 
+        }
+
+        // --- 2. DIRECTION ---
         if(name.toLowerCase() === "direction") {
             const dirUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:A?key=${apiKey}`;
             const dirResp = await fetch(dirUrl);
             const dirJson = await dirResp.json();
             if (dirJson.values) {
-                // On récupère les noms de la colonne A (en ignorant l'entête)
                 const nomsDirection = dirJson.values.flat().slice(1);
                 setPrincipalOptions(nomsDirection);
             }
-            continue; // On ne l'ajoute pas à la liste des classes
+            continue;
         }
-        // ---------------------------------------
 
+        // --- 3. LES CLASSES ---
         classes.push(name);
         const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:C?key=${apiKey}`;
         const resp = await fetch(dataUrl);
@@ -187,13 +203,15 @@ async function loadGoogleSheets() {
             }));
         }
     }
+
     classSelect.innerHTML = '<option value="">Selectionner</option>';
     classes.sort().forEach(n => {
         const o = document.createElement("option");
         o.value = o.textContent = n;
         classSelect.appendChild(o);
     });
-  } catch (err) { console.error(err); }
+
+  } catch (err) { console.error("Erreur lecture codes/classes:", err); }
 }
 
 function setPrincipalOptions(principals) {
@@ -205,8 +223,44 @@ function setPrincipalOptions(principals) {
   });
 }
 
-classSelect.addEventListener("change", (e) => applyClassSubjects(e.target.value));
+// --- GESTION DU VERROUILLAGE AU CHANGEMENT DE CLASSE ---
+classSelect.addEventListener("change", (e) => {
+    const classe = e.target.value;
+    if (!classe) {
+        applyClassSubjects("");
+        return;
+    }
+
+    const codeAttendu = classCodes[classe];
+    
+    // Si la classe a déjà été déverrouillée pendant cette session
+    if (sessionStorage.getItem(`access_${classe}`) === "granted") {
+        applyClassSubjects(classe);
+        return;
+    }
+
+    // Si un code est prévu pour cette classe dans le Sheets
+    if (codeAttendu) {
+        const codeSaisi = prompt(`Accès sécurisé GIPE. Veuillez entrer le code pour la classe ${classe} :`);
+        
+        if (codeSaisi === codeAttendu) {
+            // On enregistre la réussite dans la mémoire du navigateur (session)
+            sessionStorage.setItem(`access_${classe}`, "granted");
+            applyClassSubjects(classe);
+        } else {
+            alert("Code incorrect ! L'accès à cette classe est restreint.");
+            classSelect.value = ""; // On remet le menu sur "Sélectionner"
+            applyClassSubjects(""); // On vide le tableau des professeurs
+        }
+    } else {
+        // Si aucun code n'est défini dans l'onglet "code classe", on laisse passer
+        applyClassSubjects(classe);
+    }
+});
+
+// Le bouton de secours pour recharger
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 
+// Lancement de l'application
 loadConfig();
 
