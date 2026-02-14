@@ -226,7 +226,9 @@ classSelect.addEventListener("change", (e) => {
         return;
     }
 
-    const codeAttendu = classCodes[classe];
+    // On récupère le code et on enlève les espaces (s'il n'y a rien, ça devient null)
+    const codeRaw = classCodes[classe];
+    const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
     
     // 1. On vérifie si la classe est déjà déverrouillée (Session)
     if (sessionStorage.getItem(`access_${classe}`) === "granted") {
@@ -234,8 +236,8 @@ classSelect.addEventListener("change", (e) => {
         return;
     }
 
-    // 2. Si un code existe, on le demande
-    if (codeAttendu) {
+    // 2. Si un code VALIDE et NON VIDE existe, on le demande
+    if (codeAttendu !== null) {
         const codeSaisi = prompt(`Accès sécurisé GIPE. Veuillez entrer le code pour la classe ${classe} :`);
         
         if (codeSaisi === codeAttendu) {
@@ -247,9 +249,9 @@ classSelect.addEventListener("change", (e) => {
             applyClassSubjects("");
         }
     } 
-    // 3. NOUVEAU : Si pas de code renseigné dans le Sheets, on bloque !
+    // 3. Si le code est vide dans Excel ou si la classe n'est pas dans la liste
     else {
-        alert("Accès refusé : aucun code n'a été configuré pour cette classe. Veuillez contacter l'administrateur GIPE.");
+        alert("ERREUR : Aucun code de déverrouillage n'a été configuré pour la classe " + classe + ". L'accès est bloqué par sécurité.");
         classSelect.value = "";
         applyClassSubjects("");
     }
@@ -257,5 +259,6 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
 
 
