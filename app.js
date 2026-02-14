@@ -152,7 +152,21 @@ async function loadGoogleSheets() {
     const classes = [];
     for (const sheet of metaData.sheets || []) {
         const name = sheet.properties.title;
-        if(name.toLowerCase() === "direction") continue;
+
+        // --- NOUVEAU BLOC POUR LA DIRECTION ---
+        if(name.toLowerCase() === "direction") {
+            const dirUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:A?key=${apiKey}`;
+            const dirResp = await fetch(dirUrl);
+            const dirJson = await dirResp.json();
+            if (dirJson.values) {
+                // On récupère les noms de la colonne A (en ignorant l'entête)
+                const nomsDirection = dirJson.values.flat().slice(1);
+                setPrincipalOptions(nomsDirection);
+            }
+            continue; // On ne l'ajoute pas à la liste des classes
+        }
+        // ---------------------------------------
+
         classes.push(name);
         const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:C?key=${apiKey}`;
         const resp = await fetch(dataUrl);
@@ -183,4 +197,5 @@ function setPrincipalOptions(principals) {
 
 classSelect.addEventListener("change", (e) => applyClassSubjects(e.target.value));
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
+
 loadConfig();
