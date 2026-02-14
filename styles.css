@@ -351,6 +351,8 @@ body {
   position: relative;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   color: #333333;
+  max-height: 80vh;    /* La boîte ne dépassera jamais 80% de la hauteur de l'écran */
+  overflow-y: auto;    /* Ajoute un scroll interne si le texte est trop long */
 }
 
 .close-btn {
@@ -383,3 +385,4 @@ body {
   margin-bottom: 15px;
   line-height: 1.5;
 }
+
