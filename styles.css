@@ -319,7 +319,36 @@ body {
   .grid > .panel {
     background-color: #ffffff !important;
   }
+  /* La fenêtre de fond (noir transparent) */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 10000;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
 }
+
+/* La boîte blanche au milieu */
+.modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Le bouton fermer (la croix) */
+.close-btn {
+  position: absolute;
+  right: 15px; top: 10px;
+  font-size: 24px; cursor: pointer;
+}
+
+.btn.info { background-color: #0288d1; color: white; }
+}
+
 
 
 
