@@ -905,5 +905,44 @@ body {
     page-break-after: avoid;
 
   }
-
+  /* 1. On colorie le panneau de GAUCHE (Saisie) en jaune-orange clair */
+.grid > .panel:first-of-type {
+  background-color: #fff9e6 !important;
 }
+
+/* 2. On colorie le fond du panneau de DROITE (Récap) en gris */
+.grid > .panel.preview-panel {
+  background-color: #e9ecef !important; /* Gris bureau */
+  padding: 30px !important; /* On donne un peu d'air autour de la feuille */
+}
+
+/* 3. On crée l'effet "Feuille Blanche" uniquement sur le contenu du récap */
+/* On cible les éléments internes de la preview pour les mettre sur blanc */
+.preview-header, 
+.preview-section, 
+.preview-block {
+  background-color: white !important;
+  padding: 15px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+  margin-bottom: 15px !important;
+}
+
+/* 4. SECURITÉ IMPRESSION : On remet tout en blanc pur */
+@media print {
+  .grid > .panel:first-of-type {
+    display: none !important; /* Cache la saisie */
+  }
+  .grid > .panel.preview-panel,
+  .preview-header, 
+  .preview-section, 
+  .preview-block {
+    background-color: white !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+
+
