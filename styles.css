@@ -37,6 +37,11 @@ body {
   box-shadow: 0 10px 30px rgba(27, 31, 36, 0.08);
 }
 
+/* Force le dernier logo (parent) à droite */
+.app-header .brand:last-child {
+  margin-left: auto;
+}
+
 .print-header {
   display: none;
 }
@@ -172,11 +177,6 @@ body {
   margin: 0 0 10px;
 }
 
-.table {
-  display: grid;
-  gap: 8px;
-}
-
 .table .row {
   display: grid;
   grid-template-columns: 1.2fr 1.4fr 0.6fr;
@@ -188,17 +188,6 @@ body {
   font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.table .row .remove {
-  border: none;
-  background: #e74c3c;
-  color: #ffffff;
-  padding: 6px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
 }
 
 .table .row .presence-btn {
@@ -207,8 +196,6 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 16px;
-  transition: all 0.2s;
 }
 
 .table .row .presence-btn.present { background: #27ae60; color: #ffffff; }
@@ -226,22 +213,6 @@ body {
   padding-bottom: 12px;
 }
 
-.preview-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-}
-
-.preview-value {
-  margin-top: 6px;
-  font-weight: 600;
-}
-
-.preview-section {
-  margin-top: 16px;
-}
-
 .preview-table {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -254,13 +225,6 @@ body {
   gap: 0;
 }
 
-.preview-table .row.header {
-  background: #f0f4f7;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .preview-table .row > div {
   padding: 8px 10px;
   border-right: 1px solid var(--line);
@@ -268,30 +232,21 @@ body {
   min-height: 32px;
 }
 
-.preview-table .row > div:last-child { border-right: none; }
-.preview-table .row.header > div { border-top: none; }
-
-.preview-table.compact .row, 
-.preview-table.compact .row.header,
-.preview-table.synthesis .row {
-  grid-template-columns: repeat(3, 1fr);
+.preview-table .row.header {
+  background: #f0f4f7;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
-.preview-table.compact .row.header { background: #f6f2ec; }
-.preview-table.compact .row.header + .row { background: #ffffff; font-size: 13px; }
-.preview-table.compact .row.header + .row > div { min-height: 48px; }
+.preview-table.compact .row {
+  grid-template-columns: repeat(3, 1fr);
+}
 
 .preview-block {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px 12px;
   margin-top: 10px;
-}
-
-.preview-block-title {
-  font-weight: 600;
-  color: var(--muted);
-  font-size: 13px;
 }
 
 .preview-text {
@@ -309,21 +264,34 @@ body {
   .grid { grid-template-columns: 1fr; }
 }
 
+/* --- LOGIQUE D'IMPRESSION CORRIGÉE --- */
 @media print {
   body { background: #ffffff; }
   .form-panel, .actions { display: none !important; }
   .app { padding: 0; }
   .app-header, .panel { border: none; box-shadow: none; }
-  .print-header { display: grid; page-break-before: always; margin-top: 12px; }
+  
+  /* Le header se met sur la deuxième page */
+  .print-header { 
+    display: grid; 
+    grid-template-columns: 1fr 2fr 1fr;
+    page-break-before: always; 
+    margin-top: 12px; 
+  }
+  
+  /* Décale le logo parent à droite à l'impression */
+  .print-header .brand:last-child {
+    margin-left: auto;
+  }
+
   .grid { grid-template-columns: 1fr; }
   .preview-table { page-break-inside: avoid; font-size: 13px; }
   .preview-table .row > div { padding: 6px 8px; }
   .preview-section { page-break-inside: avoid; }
   .preview-section:first-of-type { max-height: 620px; overflow: hidden; }
-  .app-header { page-break-after: avoid; }
 }
 
-/* --- COULEURS DES PANNEAUX (AJOUT FINAL) --- */
+/* --- COULEURS DES PANNEAUX (ÉCRAN UNIQUEMENT) --- */
 @media screen {
   .grid > .panel:nth-child(1) {
     background-color: #fff9e6 !important;
@@ -338,4 +306,5 @@ body {
     background-color: #ffffff !important;
   }
 }
+
 
