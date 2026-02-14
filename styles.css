@@ -330,29 +330,38 @@ body {
 /* --- LE STYLE DE L'AIDE (POUR L'ÉCRAN) --- */
 /* On écrit ça APRÈS la fermeture de l'accolade du media print */
 
+/* La fenêtre de fond (le voile noir) */
 .modal {
-  display: none; /* Caché par défaut */
+  display: none; 
   position: fixed;
-  z-index: 9999; /* Toujours au-dessus de tout */
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Fond sombre */
+  z-index: 10000;
+  left: 0; top: 0; 
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  
+  /* --- LES 3 LIGNES POUR CENTRER --- */
+  display: none; /* On garde display: none par défaut pour le JS */
+  align-items: center;     /* Centre verticalement */
+  justify-content: center;  /* Centre horizontalement */
 }
 
+/* On modifie cette règle pour que le JS active le centrage */
+/* Quand le JS mettra "display: flex", le centrage s'activera */
+
 .modal-content {
-  background-color: #ffffff;
-  margin: 10% auto;
+  background-color: white;
   padding: 25px;
   width: 90%;
   max-width: 500px;
   border-radius: 10px;
   position: relative;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  color: #333333;
-  max-height: 80vh;    /* La boîte ne dépassera jamais 80% de la hauteur de l'écran */
-  overflow-y: auto;    /* Ajoute un scroll interne si le texte est trop long */
+  
+  /* On enlève le "margin: 10% auto" car Flexbox s'occupe de tout */
+  margin: 0; 
+  
+  max-height: 85vh; /* Hauteur max pour éviter de toucher les bords */
+  overflow-y: auto; /* Scroll interne si besoin */
 }
 
 .close-btn {
@@ -385,4 +394,5 @@ body {
   margin-bottom: 15px;
   line-height: 1.5;
 }
+
 
