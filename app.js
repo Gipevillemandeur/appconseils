@@ -4,7 +4,6 @@ const classSelect = document.getElementById("input-class");
 const loadSampleBtn = document.getElementById("load-sample");
 const principalSelect = document.getElementById("input-principal");
 
-// On ne branche pas les boutons d'aide ici pour éviter de bloquer le démarrage
 let csvData = {};
 let classCodes = {};
 let config = { principals: [] };
@@ -210,8 +209,8 @@ function setPrincipalOptions(principals) {
   });
 }
 
-// --- PROTECTION DU SYSTÈME D'AIDE (Ne bloque plus le reste) ---
-window.addEventListener('load', () => {
+// --- PROTECTION DU SYSTÈME D'AIDE ---
+window.addEventListener('DOMContentLoaded', () => {
     const helpModal = document.getElementById("help-modal");
     const helpBtn = document.getElementById("open-help");
     const helpSpan = document.querySelector(".close-btn");
@@ -256,3 +255,4 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
