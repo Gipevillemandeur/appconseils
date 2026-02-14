@@ -179,7 +179,7 @@ body {
 
 .table .row {
   display: grid;
-  grid-template-columns: 1.2fr 1.4fr 0.6fr;
+  grid-template-columns: 1.2fr 1.4fr 0.4fr;
   gap: 8px;
   align-items: center;
 }
@@ -191,11 +191,13 @@ body {
 }
 
 .table .row .presence-btn {
-  width: 42px !important;
-  height: 30px !important;
+  width: 100% !important;
+  max-width: 42px !important
+  height: 28px !important;
   border: 1.5px solid rgba(0,0,0,0.15) !important;
   display: inline-flex !important
   justify-content: center;
+  margin 0auto !important;
   align-items: center;
   padding: 0 !important;
   border-radius: 8px !important;
@@ -317,6 +319,7 @@ body {
     background-color: #ffffff !important;
   }
 }
+
 
 
 
