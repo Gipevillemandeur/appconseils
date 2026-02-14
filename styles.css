@@ -372,6 +372,23 @@ body {
   min-height: 60px;
 }
 
+/* AJOUTE LE CODE ICI (POUR L'ÉCRAN) */
+#input-principal {
+  width: 250px; /* J'ai mis 250px pour que les noms longs ne soient pas coupés */
+  max-width: 100%;
+}
+
+.field-grid .field:has(#input-principal) {
+  width: fit-content;
+}
+
+/* ENSUITE LES RÈGLES SPÉCIALES ÉCRAN MOBILE */
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1000px) {
   .grid {
     grid-template-columns: 1fr;
@@ -435,16 +452,6 @@ body {
   .app-header {
     page-break-after: avoid;
   }
-  /* Réduction de la largeur du menu Président */
-     #input-principal {
-    width: 200px; /* Tu peux ajuster cette valeur (ex: 150px ou 250px) */
-    max-width: 100%;
-  }
-
-  /* Optionnel : si tu veux aussi que le champ soit aligné à gauche 
-   au lieu de chercher à remplir l'espace dans sa cellule de grille */
-.field-grid .field:has(#input-principal) {
-    width: fit-content;
-  }
 }
+
 
