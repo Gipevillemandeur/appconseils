@@ -255,4 +255,3 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
-
