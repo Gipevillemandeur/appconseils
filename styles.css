@@ -191,11 +191,22 @@ body {
 }
 
 .table .row .presence-btn {
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
+  width: 42px !important;
+  height: 30px !important;
+  border: 1.5px solid rgba(0,0,0,0.15) !important;
+  display: inline-flex !important
+  justify-content: center;
+  align-items: center;
+  padding: 0 !important;
+  border-radius: 8px !important;
   cursor: pointer;
   font-weight: 700;
+  transition:all 0.2s ease;
+}
+
+.table .row .presence-btn:hover {
+  filter: brightness(0.9); /* Fonce légèrement la couleur */
+  border-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 .table .row .presence-btn.present { background: #27ae60; color: #ffffff; }
@@ -306,6 +317,7 @@ body {
     background-color: #ffffff !important;
   }
 }
+
 
 
 
