@@ -31,6 +31,7 @@ const bindMap = [
   ["input-obs-principal", "preview-obs-principal"],
   ["input-obs-pp", "preview-obs-pp"],
   ["input-obs-eleves", "preview-obs-eleves"],
+  ["input-obs-parents", "preview-obs-parents"],
 ];
 
 function setPreviewText(inputId, previewId, transform) {
@@ -259,6 +260,7 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
 
 
 
