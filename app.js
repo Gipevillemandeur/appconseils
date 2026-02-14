@@ -216,7 +216,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const helpSpan = document.querySelector(".close-btn");
 
     if (helpBtn && helpModal && helpSpan) {
-        helpBtn.onclick = () => { helpModal.style.display = "block"; };
+        helpBtn.onclick = () => { helpModal.style.display = "flex"; };
         helpSpan.onclick = () => { helpModal.style.display = "none"; };
         window.onclick = (event) => {
             if (event.target == helpModal) helpModal.style.display = "none";
@@ -255,3 +255,4 @@ classSelect.addEventListener("change", (e) => {
 
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
 loadConfig();
+
