@@ -233,34 +233,33 @@ classSelect.addEventListener("change", (e) => {
 
     const codeAttendu = classCodes[classe];
     
-    // Si la classe a déjà été déverrouillée pendant cette session
+    // 1. On vérifie si la classe est déjà déverrouillée (Session)
     if (sessionStorage.getItem(`access_${classe}`) === "granted") {
         applyClassSubjects(classe);
         return;
     }
 
-    // Si un code est prévu pour cette classe dans le Sheets
+    // 2. Si un code existe, on le demande
     if (codeAttendu) {
         const codeSaisi = prompt(`Accès sécurisé GIPE. Veuillez entrer le code pour la classe ${classe} :`);
         
         if (codeSaisi === codeAttendu) {
-            // On enregistre la réussite dans la mémoire du navigateur (session)
             sessionStorage.setItem(`access_${classe}`, "granted");
             applyClassSubjects(classe);
         } else {
             alert("Code incorrect ! L'accès à cette classe est restreint.");
-            classSelect.value = ""; // On remet le menu sur "Sélectionner"
-            applyClassSubjects(""); // On vide le tableau des professeurs
+            classSelect.value = ""; 
+            applyClassSubjects("");
         }
-    } else {
-        // Si aucun code n'est défini dans l'onglet "code classe", on laisse passer
-        applyClassSubjects(classe);
+    } 
+    // 3. NOUVEAU : Si pas de code renseigné dans le Sheets, on bloque !
+    else {
+        alert("Accès refusé : aucun code n'a été configuré pour cette classe. Veuillez contacter l'administrateur GIPE.");
+        classSelect.value = "";
+        applyClassSubjects("");
     }
 });
 
-// Le bouton de secours pour recharger
 loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
-
-// Lancement de l'application
 loadConfig();
 
