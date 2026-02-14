@@ -42,8 +42,8 @@ body {
   margin-left: auto;
 }
 
-.print-header {
-  display: none;
+.header-page2 {
+  display: none !important;
 }
 
 .brand {
@@ -286,11 +286,11 @@ body {
   .app-header, .panel { border: none; box-shadow: none; }
   
   /* Le header se met sur la deuxième page */
-  .print-header { 
-    display: grid; 
+  .header-page2 {
+    display: grid !important; 
     grid-template-columns: 1fr 2fr 1fr;
-    page-break-before: always; 
-    margin-top: 12px; 
+    page-break-before: always !important; /* Le fameux saut de page */
+    margin-top: 12px;
   }
   
   /* Décale le logo parent à droite à l'impression */
@@ -320,6 +320,7 @@ body {
     background-color: #ffffff !important;
   }
 }
+
 
 
 
