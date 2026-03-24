@@ -171,9 +171,9 @@ async function loadMeta() {
     const sheetNames = (metaData.sheets || []).map(s => s.properties.title);
 
     const promises = [];
-    if (sheetNames.includes("Code classe")) {
+    if (sheetNames.includes("code classe")) {
       promises.push(
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("Code classe")}!A:B?key=${apiKey}`)
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("code classe")}!A:B?key=${apiKey}`)
           .then(r => r.json()).then(json => {
             if (json.values) json.values.slice(1).forEach(row => { if (row[0]) classCodes[row[0]] = row[1]; });
           })
