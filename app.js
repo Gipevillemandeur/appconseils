@@ -1,91 +1,113 @@
-const subjectForm = document.getElementById("subjects-form");
+// ============================================================
+//  ÉTAT GLOBAL
+// ============================================================
+const subjectForm    = document.getElementById("subjects-form");
 const subjectPreview = document.getElementById("subjects-preview");
-const classSelect = document.getElementById("input-class");
-const loadSampleBtn = document.getElementById("load-sample");
+const classSelect    = document.getElementById("input-class");
+const loadSampleBtn  = document.getElementById("load-sample");
 const principalSelect = document.getElementById("input-principal");
 
-let csvData = {};
 let classCodes = {};
-let config = { principals: [] };
+let allClasses = [];
+let config     = {};
 
+// ============================================================
+//  UTILITAIRES
+// ============================================================
 function formatDate(value) {
-  if (!value) return "-";
+  if (!value) return "—";
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
 }
 
-const bindMap = [
-  ["input-class", "preview-title", (v) => `Conseil de classe ${v || "-"}`],
-  ["input-term", "preview-term"],
-  ["input-date", "header-date", formatDate],
-  ["input-principal", "preview-principal"],
-  ["input-parents", "preview-parents"],
-  ["input-students", "preview-students"],
-  ["input-others", "preview-others"],
-  ["input-fel", "preview-fel"],
-  ["input-comp", "preview-comp"],
-  ["input-enc", "preview-enc"],
-  ["input-avc", "preview-avc"],
-  ["input-avt", "preview-avt"],
-  ["input-ava", "preview-ava"],
-  ["input-obs-principal", "preview-obs-principal"],
-  ["input-obs-pp", "preview-obs-pp"],
-  ["input-obs-eleves", "preview-obs-eleves"],
-  ["input-obs-parents", "preview-obs-parents"],
-];
-
-function setPreviewText(inputId, previewId, transform) {
-  const input = document.getElementById(inputId);
-  const preview = document.getElementById(previewId);
-  if (!input || !preview) return;
-  const update = () => {
-    const value = input.value.trim();
-    const text = transform ? transform(value) : value || "-";
-    if (input.tagName === "TEXTAREA") {
-      preview.innerHTML = text.replace(/\n/g, '<br>');
-    } else {
-      preview.textContent = text;
-    }
-  };
-  input.addEventListener("input", update);
-  input.addEventListener("change", update);
-  update();
+function setPreview(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+  const el2 = document.getElementById(id + "-p2");
+  if (el2) el2.textContent = text;
 }
 
-bindMap.forEach(([inputId, previewId, transform]) => setPreviewText(inputId, previewId, transform));
+function setPreviewHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
 
+// ============================================================
+//  BINDINGS FORMULAIRE → APERÇU
+// ============================================================
+const bindMap = [
+  ["input-class",         "preview-title",        (v) => `Conseil de classe ${v || "—"}`],
+  ["input-term",          "preview-term"],
+  ["input-date",          "header-date",           formatDate],
+  ["input-principal",     "preview-principal"],
+  ["input-parents",       "preview-parents"],
+  ["input-students",      "preview-students"],
+  ["input-others",        "preview-others"],
+  ["input-fel",           "preview-fel"],
+  ["input-comp",          "preview-comp"],
+  ["input-enc",           "preview-enc"],
+  ["input-avc",           "preview-avc"],
+  ["input-avt",           "preview-avt"],
+  ["input-ava",           "preview-ava"],
+  ["input-obs-principal", "preview-obs-principal"],
+  ["input-obs-pp",        "preview-obs-pp"],
+  ["input-obs-eleves",    "preview-obs-eleves"],
+  ["input-obs-parents",   "preview-obs-parents"],
+];
+
+function setupBindings() {
+  bindMap.forEach(([inputId, previewId, transform]) => {
+    const input   = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+    const update = () => {
+      const value = input.value.trim();
+      const text  = transform ? transform(value) : value || "—";
+      if (input.tagName === "TEXTAREA") {
+        setPreviewHTML(previewId, text.replace(/\n/g, "<br>"));
+      } else {
+        setPreview(previewId, text);
+      }
+    };
+    input.addEventListener("input",  update);
+    input.addEventListener("change", update);
+    update();
+  });
+}
+
+// ============================================================
+//  TABLEAU MATIÈRES
+// ============================================================
 function createSubjectRow(values = {}) {
-  const row = document.createElement("div");
+  const row     = document.createElement("div");
   row.className = "row";
   const matiere = document.createElement("input");
   matiere.value = values.matiere || "";
-  const prof = document.createElement("input");
-  prof.value = values.prof || "";
+  const prof    = document.createElement("input");
+  prof.value    = values.prof || "";
   const presentBtn = document.createElement("button");
-  presentBtn.type = "button";
-  presentBtn.className = "presence-btn";
-  let isPresent = values.present === "Oui" || values.present === "";
-  const updatePresenceBtn = () => {
-    presentBtn.className = isPresent ? "presence-btn present" : "presence-btn absent";
+  presentBtn.type  = "button";
+  let isPresent    = values.present === "Oui" || values.present === "";
+  const updateBtn  = () => {
+    presentBtn.className   = isPresent ? "presence-btn present" : "presence-btn absent";
     presentBtn.textContent = isPresent ? "✓" : "✗";
   };
-  updatePresenceBtn();
-  presentBtn.addEventListener("click", () => { isPresent = !isPresent; updatePresenceBtn(); renderSubjects(); });
+  updateBtn();
+  presentBtn.addEventListener("click", () => { isPresent = !isPresent; updateBtn(); renderSubjects(); });
   row.appendChild(matiere); row.appendChild(prof); row.appendChild(presentBtn);
-  const onChange = () => renderSubjects();
-  matiere.addEventListener("input", onChange); prof.addEventListener("input", onChange);
-  row._getPresence = () => isPresent ? "Oui" : "Non";
+  matiere.addEventListener("input", renderSubjects);
+  prof.addEventListener("input",    renderSubjects);
+  row._getPresence = () => (isPresent ? "Oui" : "Non");
   return row;
 }
 
 function renderSubjects() {
   subjectPreview.innerHTML = "";
-  const rows = subjectForm.querySelectorAll(".row:not(.header)");
-  rows.forEach((row) => {
-    const inputs = row.querySelectorAll("input");
+  subjectForm.querySelectorAll(".row:not(.header)").forEach((row) => {
+    const inputs     = row.querySelectorAll("input");
     const previewRow = document.createElement("div");
     previewRow.className = "row";
-    [inputs[0].value || "-", inputs[1].value || "-", row._getPresence()].forEach((text) => {
+    [inputs[0].value || "—", inputs[1].value || "—", row._getPresence()].forEach((text) => {
       const cell = document.createElement("div");
       cell.textContent = text;
       previewRow.appendChild(cell);
@@ -94,110 +116,89 @@ function renderSubjects() {
   });
 }
 
-function applyClassSubjects(className) {
-    const rows = subjectForm.querySelectorAll(".row:not(.header)");
-    rows.forEach(r => r.remove());
-    const entries = csvData[className] || [];
-    if (entries.length === 0) {
-        subjectForm.appendChild(createSubjectRow());
-    } else {
-        entries.forEach(entry => subjectForm.appendChild(createSubjectRow(entry)));
-    }
-    renderSubjects();
+function applyClassSubjects(entries = []) {
+  subjectForm.querySelectorAll(".row:not(.header)").forEach(r => r.remove());
+  if (entries.length === 0) {
+    subjectForm.appendChild(createSubjectRow());
+  } else {
+    entries.forEach(entry => subjectForm.appendChild(createSubjectRow(entry)));
+  }
+  renderSubjects();
 }
 
-// --- ACTIONS BOUTONS ---
-
-document.getElementById("print").addEventListener("click", () => {
-    const alertMsg = "Attention : veuillez bien sélectionner 'Enregistrer au format PDF' pour l'envoi au GIPE.";
-    if (confirm(alertMsg)) {
-        const classe = classSelect.value || "Classe";
-        const trimestre = document.getElementById("input-term").value || "Trimestre";
-        const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, '_');
-        const originalTitle = document.title;
-        document.title = nomFichier;
-        window.print();
-        setTimeout(() => { document.title = originalTitle; }, 1000);
-    }
-});
-
-document.getElementById("listing-eleves").addEventListener("click", () => {
-  const classe = classSelect.value;
-  if(!classe) { alert("Sélectionnez une classe"); return; }
-  window.open(`listing-eleves.html?classe=${encodeURIComponent(classe)}&trimestre=${encodeURIComponent(document.getElementById("input-term").value)}&date=${document.getElementById("input-date").value}`, '_blank');
-});
-
-
-// --- CHARGEMENT ---
-
-async function loadConfig() {
+// ============================================================
+//  CHARGEMENT À LA DEMANDE (une seule classe)
+// ============================================================
+async function loadClasseData(className) {
+  const { apiKey, spreadsheetId } = config.googleSheets;
+  const loading = document.getElementById("subjects-loading");
+  loading.style.display = "block";
+  subjectForm.querySelectorAll(".row:not(.header)").forEach(r => r.remove());
   try {
-    const response = await fetch("data/config.json");
-    config = await response.json();
-    principalSelect.innerHTML = '<option value="">Chargement...</option>';
-    if (config.googleSheets?.apiKey) {
-        loadGoogleSheets();
-    }
-  } catch (err) { 
-    console.error(err); 
+    const url  = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(className)}!A:C?key=${apiKey}`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+    const entries = json.values
+      ? json.values.slice(1).map(row => ({ matiere: row[0] || "", prof: row[1] || "", present: row[2] || "" }))
+      : [];
+    applyClassSubjects(entries);
+  } catch (err) {
+    console.error("Erreur chargement classe :", err);
+    applyClassSubjects([]);
+  } finally {
+    loading.style.display = "none";
   }
 }
 
-async function loadGoogleSheets() {
+// ============================================================
+//  CHARGEMENT INITIAL (meta + liste classes + direction)
+// ============================================================
+async function loadConfig() {
+  try {
+    const resp = await fetch("data/config.json");
+    config = await resp.json();
+  } catch (err) {
+    showAccueilErreur(); return;
+  }
+  if (config.googleSheets?.apiKey) await loadMeta();
+}
+
+async function loadMeta() {
   const { apiKey, spreadsheetId } = config.googleSheets;
   try {
-    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`;
-    const metaResponse = await fetch(metaUrl);
-    const metaData = await metaResponse.json();
-    
-    csvData = {};
-    const classes = [];
+    const metaResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`);
+    const metaData = await metaResp.json();
+    const sheetNames = (metaData.sheets || []).map(s => s.properties.title);
 
-    for (const sheet of metaData.sheets || []) {
-        const name = sheet.properties.title;
-
-        if(name.toLowerCase() === "code classe") {
-            const codesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:B?key=${apiKey}`;
-            const codesResp = await fetch(codesUrl);
-            const codesJson = await codesResp.json();
-            if (codesJson.values) {
-                codesJson.values.slice(1).forEach(row => {
-                    if(row[0]) classCodes[row[0]] = row[1]; 
-                });
-            }
-            continue; 
-        }
-
-        if(name.toLowerCase() === "direction") {
-            const dirUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:A?key=${apiKey}`;
-            const dirResp = await fetch(dirUrl);
-            const dirJson = await dirResp.json();
-            if (dirJson.values) {
-                const nomsDirection = dirJson.values.flat().slice(1);
-                setPrincipalOptions(nomsDirection);
-            }
-            continue;
-        }
-
-        classes.push(name);
-        const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(name)}!A:C?key=${apiKey}`;
-        const resp = await fetch(dataUrl);
-        const json = await resp.json();
-        if (json.values) {
-            csvData[name] = json.values.slice(1).map(row => ({
-                matiere: row[0] || "", prof: row[1] || "", present: row[2] || ""
-            }));
-        }
+    const promises = [];
+    if (sheetNames.includes("Code classe")) {
+      promises.push(
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("Code classe")}!A:B?key=${apiKey}`)
+          .then(r => r.json()).then(json => {
+            if (json.values) json.values.slice(1).forEach(row => { if (row[0]) classCodes[row[0]] = row[1]; });
+          })
+      );
     }
+    if (sheetNames.includes("Direction")) {
+      promises.push(
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("Direction")}!A:A?key=${apiKey}`)
+          .then(r => r.json()).then(json => {
+            if (json.values) setPrincipalOptions(json.values.flat().slice(1));
+          })
+      );
+    }
+    await Promise.all(promises);
 
-    classSelect.innerHTML = '<option value="">Selectionner</option>';
-    classes.sort().forEach(n => {
-        const o = document.createElement("option");
-        o.value = o.textContent = n;
-        classSelect.appendChild(o);
-    });
+    allClasses = sheetNames
+      .filter(n => !["code classe", "direction"].includes(n.toLowerCase()))
+      .sort();
 
-  } catch (err) { console.error("Erreur lecture codes/classes:", err); }
+    populateClasseSelects(allClasses);
+    showAccueilFormulaire();
+  } catch (err) {
+    console.error("Erreur meta :", err);
+    showAccueilErreur();
+  }
 }
 
 function setPrincipalOptions(principals) {
@@ -209,50 +210,137 @@ function setPrincipalOptions(principals) {
   });
 }
 
-// --- PROTECTION DU SYSTÈME D'AIDE ---
-window.addEventListener('DOMContentLoaded', () => {
-    const helpModal = document.getElementById("help-modal");
-    const helpBtn = document.getElementById("open-help");
-    const helpSpan = document.querySelector(".close-btn");
+function populateClasseSelects(classes) {
+  const accueilSelect = document.getElementById("accueil-classe");
+  accueilSelect.innerHTML = '<option value="">— Sélectionner —</option>';
+  classSelect.innerHTML   = '<option value="">Selectionner</option>';
+  classes.forEach(n => {
+    [accueilSelect, classSelect].forEach(sel => {
+      const o = document.createElement("option");
+      o.value = o.textContent = n;
+      sel.appendChild(o);
+    });
+  });
+}
 
-    if (helpBtn && helpModal && helpSpan) {
-        helpBtn.onclick = () => { helpModal.style.display = "flex"; };
-        helpSpan.onclick = () => { helpModal.style.display = "none"; };
-        window.onclick = (event) => {
-            if (event.target == helpModal) helpModal.style.display = "none";
-        };
-    }
+// ============================================================
+//  ÉCRAN D'ACCUEIL
+// ============================================================
+function showAccueilFormulaire() {
+  document.getElementById("accueil-chargement").style.display = "none";
+  document.getElementById("accueil-formulaire").style.display = "flex";
+}
+
+function showAccueilErreur() {
+  document.getElementById("accueil-chargement").style.display = "none";
+  document.getElementById("accueil-erreur").style.display     = "block";
+}
+
+document.getElementById("accueil-classe").addEventListener("change", (e) => {
+  const btn = document.getElementById("accueil-btn-commencer");
+  if (e.target.value) {
+    btn.disabled = false;
+    btn.textContent = "Commencer ➜";
+  } else {
+    btn.disabled = true;
+    btn.textContent = "Sélectionnez une classe…";
+  }
 });
 
-// --- GESTION DU VERROUILLAGE ---
-classSelect.addEventListener("change", (e) => {
-    const classe = e.target.value;
-    if (!classe) { applyClassSubjects(""); return; }
+document.getElementById("accueil-btn-commencer").addEventListener("click", async () => {
+  const classe    = document.getElementById("accueil-classe").value;
+  const trimestre = document.getElementById("accueil-trim").value;
+  const date      = document.getElementById("accueil-date").value;
+  if (!classe) return;
 
-    const codeRaw = classCodes[classe];
-    const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
-    
-    if (sessionStorage.getItem(`access_${classe}`) === "granted") {
-        applyClassSubjects(classe);
-        return;
-    }
-
-    if (codeAttendu !== null) {
-        const codeSaisi = prompt(`Accès sécurisé GIPE. Veuillez entrer le code pour la classe ${classe} :`);
-        if (codeSaisi === codeAttendu) {
-            sessionStorage.setItem(`access_${classe}`, "granted");
-            applyClassSubjects(classe);
-        } else {
-            alert("Code incorrect ! L'accès à cette classe est restreint.");
-            classSelect.value = ""; 
-            applyClassSubjects("");
-        }
+  const codeRaw     = classCodes[classe];
+  const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
+  if (codeAttendu && sessionStorage.getItem(`access_${classe}`) !== "granted") {
+    const codeSaisi = prompt(`Accès sécurisé GIPE.\nVeuillez entrer le code pour la classe ${classe} :`);
+    if (codeSaisi === codeAttendu) {
+      sessionStorage.setItem(`access_${classe}`, "granted");
     } else {
-        alert("ERREUR : Aucun code configuré pour la classe " + classe);
-        classSelect.value = ""; applyClassSubjects("");
+      alert("Code incorrect ! L'accès à cette classe est restreint.");
+      return;
     }
+  }
+
+  classSelect.value = classe;
+  document.getElementById("input-term").value = trimestre;
+  if (date) document.getElementById("input-date").value = date;
+
+  setupBindings();
+
+  document.getElementById("screen-accueil").style.display = "none";
+  document.getElementById("screen-app").style.display     = "block";
+
+  await loadClasseData(classe);
 });
 
-loadSampleBtn.addEventListener("click", () => loadGoogleSheets());
-loadConfig();
+// ============================================================
+//  CHANGEMENT DE CLASSE DANS LE FORMULAIRE
+// ============================================================
+classSelect.addEventListener("change", async (e) => {
+  const classe = e.target.value;
+  if (!classe) { applyClassSubjects([]); return; }
+  const codeRaw     = classCodes[classe];
+  const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
+  if (codeAttendu && sessionStorage.getItem(`access_${classe}`) !== "granted") {
+    const codeSaisi = prompt(`Accès sécurisé GIPE.\nVeuillez entrer le code pour la classe ${classe} :`);
+    if (codeSaisi === codeAttendu) {
+      sessionStorage.setItem(`access_${classe}`, "granted");
+    } else {
+      alert("Code incorrect !"); classSelect.value = ""; applyClassSubjects([]); return;
+    }
+  }
+  await loadClasseData(classe);
+});
 
+// ============================================================
+//  BOUTONS
+// ============================================================
+document.getElementById("print").addEventListener("click", () => {
+  if (confirm("Attention : veuillez bien sélectionner 'Enregistrer au format PDF' pour l'envoi au GIPE.")) {
+    const classe    = classSelect.value || "Classe";
+    const trimestre = document.getElementById("input-term").value || "Trimestre";
+    const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
+    const originalTitle = document.title;
+    document.title = nomFichier;
+    window.print();
+    setTimeout(() => { document.title = originalTitle; }, 1000);
+  }
+});
+
+document.getElementById("listing-eleves").addEventListener("click", () => {
+  const classe = classSelect.value;
+  if (!classe) { alert("Sélectionnez une classe"); return; }
+  window.open(
+    `listing-eleves.html?classe=${encodeURIComponent(classe)}&trimestre=${encodeURIComponent(document.getElementById("input-term").value)}&date=${document.getElementById("input-date").value}`,
+    "_blank"
+  );
+});
+
+loadSampleBtn.addEventListener("click", () => {
+  const classe = classSelect.value;
+  if (classe) loadClasseData(classe);
+});
+
+// ============================================================
+//  MODALE AIDE
+// ============================================================
+window.addEventListener("DOMContentLoaded", () => {
+  const helpModal = document.getElementById("help-modal");
+  const helpBtn   = document.getElementById("open-help");
+  const helpSpan  = document.querySelector(".close-btn");
+  if (helpBtn && helpModal && helpSpan) {
+    helpBtn.onclick  = () => { helpModal.style.display = "flex"; };
+    helpSpan.onclick = () => { helpModal.style.display = "none"; };
+    window.onclick   = (e) => { if (e.target === helpModal) helpModal.style.display = "none"; };
+  }
+});
+
+// ============================================================
+//  DÉMARRAGE
+// ============================================================
+setupBindings();
+loadConfig();

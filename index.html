@@ -5,41 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Compte rendu - Conseil de classe</title>
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      .gipe-warning {
-        color: #d32f2f;
-        background-color: #fdecea;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 10px;
-        font-size: 0.9em;
-        font-weight: bold;
-        border: 1px solid #d32f2f;
-      }
-    </style>
   </head>
   <body>
-    <div class="app">
+
+    <!-- ===================== ÉCRAN D'ACCUEIL ===================== -->
+    <div id="screen-accueil" class="accueil-overlay">
+      <div class="accueil-card">
+        <div class="accueil-logos">
+          <img src="assets/logo-academie.svg" alt="Logo academie" class="accueil-logo" />
+          <img src="assets/logo-parents.png" alt="Logo parents delegues" class="accueil-logo" />
+        </div>
+        <h1 class="accueil-titre">Compte rendu<br>des parents délégués</h1>
+        <p class="accueil-sous-titre">Académie Orléans-Tours — Conseil de classe</p>
+
+        <div id="accueil-chargement" class="accueil-chargement">
+          ⏳ Chargement des données…
+        </div>
+
+        <div id="accueil-formulaire" class="accueil-form" style="display:none;">
+          <label class="field">
+            <span>Votre classe</span>
+            <select id="accueil-classe">
+              <option value="">— Sélectionner —</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Trimestre</span>
+            <select id="accueil-trim">
+              <option value="Premier trimestre">Premier trimestre</option>
+              <option value="Deuxieme trimestre">Deuxième trimestre</option>
+              <option value="Troisieme trimestre">Troisième trimestre</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Date du conseil</span>
+            <input type="date" id="accueil-date" />
+          </label>
+          <button id="accueil-btn-commencer" class="btn primary accueil-btn" disabled>Sélectionnez une classe…</button>
+        </div>
+
+        <div id="accueil-erreur" class="accueil-erreur" style="display:none;">
+          ⚠️ Impossible de charger les données. Vérifiez votre connexion.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== APPLICATION PRINCIPALE ===================== -->
+    <div id="screen-app" class="app" style="display:none;">
+
       <header class="app-header">
         <div class="brand">
           <img class="logo" src="assets/logo-academie.svg" alt="Logo academie" />
-          <div class="brand-text">
-            <div class="brand-title">ACADEMIE ORLEANS-TOURS</div>
-            <div class="brand-sub">Conseil de classe</div>
-          </div>
         </div>
         <div class="title">
           <div class="title-main">COMPTE RENDU DES PARENTS DELEGUES</div>
-          <div class="title-sub" id="preview-title">Conseil de classe 3A</div>
-          <div class="title-sub" id="preview-term">Premier trimestre</div>
-          <div class="title-sub" id="header-date">-</div>
+          <div class="title-sub" id="preview-title">—</div>
+          <div class="title-sub" id="preview-term">—</div>
+          <div class="title-sub" id="header-date">—</div>
         </div>
         <div class="brand">
           <img class="logo" src="assets/logo-parents.png" alt="Logo parents delegues" />
-          <div class="brand-text right">
-            <div class="brand-title">Parents delegues</div>
-            <div class="brand-sub">Etablissement</div>
-          </div>
         </div>
       </header>
 
@@ -68,8 +93,8 @@
               <span>Periode / Trimestre</span>
               <select id="input-term">
                 <option value="Premier trimestre">Premier trimestre</option>
-                <option value="Deuxieme trimestre">Deuxieme trimestre</option>
-                <option value="Troisieme trimestre">Troisieme trimestre</option>
+                <option value="Deuxieme trimestre">Deuxième trimestre</option>
+                <option value="Troisieme trimestre">Troisième trimestre</option>
               </select>
             </label>
           </div>
@@ -82,7 +107,6 @@
           </div>
 
           <div class="section" style="display: none;">
-            <h3>Import CSV</h3>
             <button type="button" id="load-sample">Recharger les donnees</button>
           </div>
 
@@ -96,6 +120,7 @@
 
           <div class="section">
             <h3>Equipe pédagogique</h3>
+            <div id="subjects-loading" class="subjects-loading" style="display:none;">⏳ Chargement de la classe…</div>
             <div class="table" id="subjects-form">
               <div class="row header">
                 <div>Matiere</div>
@@ -168,41 +193,40 @@
               <div id="subjects-preview"></div>
             </div>
           </div>
-          <div style="height: 10px;"></div> 
+          <div style="height: 10px;"></div>
           <div class="preview-section">
             <div class="preview-table compact">
               <div class="row header"><div>Parents delegues</div><div>Eleves delegues</div><div>Autres</div></div>
-              <div class="row"><div class="lines" id="preview-parents">-</div><div class="lines" id="preview-students">-</div><div class="lines" id="preview-others">-</div></div>
+              <div class="row">
+                <div class="lines" id="preview-parents">-</div>
+                <div class="lines" id="preview-students">-</div>
+                <div class="lines" id="preview-others">-</div>
+              </div>
             </div>
           </div>
+
+          <!-- Header page 2 — ids uniques (fix bug doublon) -->
           <header class="app-header header-page2">
-        <div class="brand">
-          <img class="logo" src="assets/logo-academie.svg" alt="Logo academie" />
-          <div class="brand-text">
-            <div class="brand-title">ACADEMIE ORLEANS-TOURS</div>
-            <div class="brand-sub">Conseil de classe</div>
-          </div>
-        </div>
-        <div class="title">
-          <div class="title-main">COMPTE RENDU DES PARENTS DELEGUES</div>
-          <div class="title-sub" id="preview-title">Conseil de classe 3A</div>
-          <div class="title-sub" id="preview-term">Premier trimestre</div>
-          <div class="title-sub" id="header-date">-</div>
-        </div>
-        <div class="brand">
-          <img class="logo" src="assets/logo-parents.png" alt="Logo parents delegues" />
-          <div class="brand-text right">
-            <div class="brand-title">Parents delegues</div>
-            <div class="brand-sub">Etablissement</div>
-          </div>
-        </div>
-      </header>
+            <div class="brand">
+              <img class="logo" src="assets/logo-academie.svg" alt="Logo academie" />
+            </div>
+            <div class="title">
+              <div class="title-main">COMPTE RENDU DES PARENTS DELEGUES</div>
+              <div class="title-sub" id="preview-title-p2">—</div>
+              <div class="title-sub" id="preview-term-p2">—</div>
+              <div class="title-sub" id="header-date-p2">—</div>
+            </div>
+            <div class="brand">
+              <img class="logo" src="assets/logo-parents.png" alt="Logo parents delegues" />
+            </div>
+          </header>
+
           <div class="preview-section">
             <div class="preview-table compact synthesis">
-                <div class="row header"><div>Felicitations</div><div>Compliments</div><div>Encouragements</div></div>
-                <div class="row"><div id="preview-fel">-</div><div id="preview-comp">-</div><div id="preview-enc">-</div></div>
-                <div class="row header"><div>Av. comportement</div><div>Av. travail</div><div>Av. assiduite</div></div>
-                <div class="row"><div id="preview-avc">-</div><div id="preview-avt">-</div><div id="preview-ava">-</div></div>
+              <div class="row header"><div>Felicitations</div><div>Compliments</div><div>Encouragements</div></div>
+              <div class="row"><div id="preview-fel">-</div><div id="preview-comp">-</div><div id="preview-enc">-</div></div>
+              <div class="row header"><div>Av. comportement</div><div>Av. travail</div><div>Av. assiduite</div></div>
+              <div class="row"><div id="preview-avc">-</div><div id="preview-avt">-</div><div id="preview-ava">-</div></div>
             </div>
           </div>
           <div class="preview-section">
@@ -215,37 +239,21 @@
         </section>
       </main>
     </div>
+
     <div id="help-modal" class="modal">
       <div class="modal-content">
         <span class="close-btn">&times;</span>
         <h2>📘 Guide d'utilisation</h2>
         <div class="help-text">
-          <p><strong>⚠️Avertissements⚠️ Pas de sauvegarde permanente</strong> : Pour votre sécurité, dès que vous fermez l'onglet ou le site, les données sont effacées. 
-             <strong> Ne fermez pas votre page avant d'avoir enregistré votre PDF ! </strong>
-                      Mise en page : Le document est configuré pour tenir sur deux pages avec un rappel de l'en-tête sur la seconde.</p>
-          <p><strong>1. Préparation et Sécurité</strong>Choix de la classe : Commencez par sélectionner votre classe dans le menu déroulant.
-                        Accès sécurisé : Un code vous sera demandé (Code transmis par le GIPE). Une fois validé, la liste des professeurs et des matières s'affichera automatiquement.
-                        Infos générales : Sélectionnez la Date du conseil, le Trimestre et le nom du Président de séance.</p>
-          <p><strong>2. Saisie des informations (Partie JAUNE ✍️)</strong> Équipe pédagogique : Cochez simplement les professeurs présents par defaut ils sont présents, en appuyant sur la coche ils passent en absents.
-                         Participants : Saisissez les noms des parents délégués et élèves délégués (un par ligne).
-                         Observations : Remplissez les blocs de texte pour la direction, le professeur principal, les élèves et les parents.
-                         Note : Tout ce que vous tapez dans la partie JAUNE se reporte automatiquement dans la partie GRISE (Aperçu) à droite. C'est cet aperçu qui sera imprimé.</p>
-          <p><strong>3. Outils annexes</strong> Bouton "Listing élèves" : Si vous avez besoin d'une feuille pour noter pendant le conseil, cliquez sur ce bouton. Vous pouvez l'imprimer vierge ou remplir et cocher directement les cases (Félicitations, Compliments, etc.).</p>
-          <p><strong>4. Enregistrement et Envoi (Etape CRUCIALE 🚀)</strong> Une fois votre saisie terminée :
-                        Cliquez sur le bouton "Imprimer compte rendu".
-                        Dans la fenêtre qui s'ouvre (Destination), ne choisissez pas votre imprimante papier.
-                        Sélectionnez "Enregistrer au format PDF".
-                        Enregistrez le fichier sur votre ordinateur (par exemple : CR_3A_T1.pdf).
-                        Envoi : Transmettez ce fichier PDF par email au GIPE.</p>
-          
+          <p><strong>⚠️ Pas de sauvegarde permanente</strong> : Dès que vous fermez l'onglet, les données sont effacées. <strong>Ne fermez pas avant d'avoir enregistré votre PDF !</strong></p>
+          <p><strong>1. Écran d'accueil</strong> : Sélectionnez votre classe, le trimestre et la date, puis cliquez sur "Commencer". Les données de votre classe se chargent automatiquement.</p>
+          <p><strong>2. Saisie (partie JAUNE ✍️)</strong> : Cochez les professeurs présents (✓ = présent, ✗ = absent). Remplissez les participants et les observations. Tout se reporte automatiquement dans l'aperçu gris.</p>
+          <p><strong>3. Listing élèves</strong> : Cliquez sur ce bouton pour ouvrir une feuille de suivi élève imprimable.</p>
+          <p><strong>4. Enregistrement (étape CRUCIALE 🚀)</strong> : Cliquez sur "Imprimer compte rendu", puis choisissez <strong>"Enregistrer au format PDF"</strong>. Transmettez ce PDF au GIPE par email.</p>
         </div>
       </div>
     </div>
 
-    <script src="app.js"></script> 
+    <script src="app.js"></script>
   </body>
 </html>
-
-
-
-
