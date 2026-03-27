@@ -175,7 +175,7 @@ async function loadMeta() {
       promises.push(
         fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("code classe")}!A:B?key=${apiKey}`)
           .then(r => r.json()).then(json => {
-            if (json.values) json.values.slice(1).forEach(row => { if (row[0]) classCodes[row[0]] = row[1]; });
+            if (json.values) json.values.slice(1).forEach(row => { if (row[0]) classCodes[row[0]] = String(row[1]).trim(); });
           })
       );
     }
