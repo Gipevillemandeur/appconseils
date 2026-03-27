@@ -292,6 +292,10 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
     }
   }
 
+  // Afficher l'écran app EN PREMIER
+  document.getElementById("screen-accueil").style.display = "none";
+  document.getElementById("screen-app").style.display     = "block";
+
   // Remplir les selects cachés (pour les bindings)
   classSelect.value = classe;
   document.getElementById("input-term").value = trimestre;
@@ -303,9 +307,6 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
   document.getElementById("input-date-display").value = formatDate(date);
 
   setupBindings();
-
-  document.getElementById("screen-accueil").style.display = "none";
-  document.getElementById("screen-app").style.display     = "block";
 
   await loadClasseData(classe);
 });
