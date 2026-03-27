@@ -306,8 +306,6 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
   document.getElementById("input-term-display").value = trimestre;
   document.getElementById("input-date-display").value = formatDate(date);
 
-  setupBindings();
-
   await loadClasseData(classe);
 });
 
