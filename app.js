@@ -5,7 +5,6 @@ const subjectForm    = document.getElementById("subjects-form");
 const subjectPreview = document.getElementById("subjects-preview");
 const classSelect    = document.getElementById("input-class");
 const loadSampleBtn  = document.getElementById("load-sample");
-const principalSelect = document.getElementById("input-principal");
 
 let classCodes = {};
 let allClasses = [];
@@ -202,11 +201,11 @@ async function loadMeta() {
 }
 
 function setPrincipalOptions(principals) {
-  principalSelect.innerHTML = '<option value="">Selectionner</option>';
+  document.getElementById("input-principal").innerHTML = '<option value="">Selectionner</option>';
   principals.forEach(p => {
     const opt = document.createElement("option");
     opt.value = opt.textContent = p;
-    principalSelect.appendChild(opt);
+    document.getElementById("input-principal").appendChild(opt);
   });
 }
 
