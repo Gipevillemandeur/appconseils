@@ -292,9 +292,15 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
     }
   }
 
+  // Remplir les selects cachés (pour les bindings)
   classSelect.value = classe;
   document.getElementById("input-term").value = trimestre;
   if (date) document.getElementById("input-date").value = date;
+
+  // Remplir les champs affichage lecture seule
+  document.getElementById("input-class-display").value = classe;
+  document.getElementById("input-term-display").value = trimestre;
+  document.getElementById("input-date-display").value = formatDate(date);
 
   setupBindings();
 

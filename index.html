@@ -93,11 +93,13 @@
           <div class="field-grid">
             <label class="field">
               <span>Classe</span>
-              <select id="input-class"></select>
+              <input type="text" id="input-class-display" readonly class="field-readonly" />
+              <select id="input-class" style="display:none;"></select>
             </label>
             <label class="field">
               <span>Periode / Trimestre</span>
-              <select id="input-term">
+              <input type="text" id="input-term-display" readonly class="field-readonly" />
+              <select id="input-term" style="display:none;">
                 <option value="Premier trimestre">Premier trimestre</option>
                 <option value="Deuxieme trimestre">Deuxième trimestre</option>
                 <option value="Troisieme trimestre">Troisième trimestre</option>
@@ -108,7 +110,8 @@
           <div class="field-grid">
             <label class="field">
               <span>Date du conseil</span>
-              <input type="date" id="input-date" />
+              <input type="text" id="input-date-display" readonly class="field-readonly" />
+              <input type="date" id="input-date" style="display:none;" />
             </label>
           </div>
 
