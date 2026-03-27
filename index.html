@@ -41,6 +41,11 @@
             <span>Date du conseil</span>
             <input type="date" id="accueil-date" />
           </label>
+          <div id="accueil-code-wrap" class="field" style="display:none;">
+            <span>Code d'accès</span>
+            <input type="password" id="accueil-code" placeholder="Entrez le code de votre classe" autocomplete="off" />
+            <span id="accueil-code-erreur" style="color:#d32f2f;font-size:12px;display:none;">❌ Code incorrect, veuillez réessayer.</span>
+          </div>
           <button id="accueil-btn-commencer" class="btn primary accueil-btn" disabled>Sélectionnez une classe…</button>
         </div>
 

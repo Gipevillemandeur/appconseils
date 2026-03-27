@@ -237,11 +237,21 @@ function showAccueilErreur() {
 }
 
 document.getElementById("accueil-classe").addEventListener("change", (e) => {
-  const btn = document.getElementById("accueil-btn-commencer");
-  if (e.target.value) {
+  const btn       = document.getElementById("accueil-btn-commencer");
+  const codeWrap  = document.getElementById("accueil-code-wrap");
+  const codeInput = document.getElementById("accueil-code");
+  const codeErr   = document.getElementById("accueil-code-erreur");
+  const classe    = e.target.value;
+  if (classe) {
+    const codeRaw = classCodes[classe];
+    const aUnCode = codeRaw && codeRaw.toString().trim() !== "";
+    codeWrap.style.display = aUnCode ? "flex" : "none";
+    codeInput.value = "";
+    codeErr.style.display = "none";
     btn.disabled = false;
     btn.textContent = "Commencer ➜";
   } else {
+    codeWrap.style.display = "none";
     btn.disabled = true;
     btn.textContent = "Sélectionnez une classe…";
   }
@@ -256,11 +266,15 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
   const codeRaw     = classCodes[classe];
   const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
   if (codeAttendu && sessionStorage.getItem(`access_${classe}`) !== "granted") {
-    const codeSaisi = prompt(`Accès sécurisé GIPE.\nVeuillez entrer le code pour la classe ${classe} :`);
+    const codeInput = document.getElementById("accueil-code");
+    const codeErr   = document.getElementById("accueil-code-erreur");
+    const codeSaisi = codeInput ? codeInput.value.trim() : "";
     if (codeSaisi === codeAttendu) {
       sessionStorage.setItem(`access_${classe}`, "granted");
+      codeErr.style.display = "none";
     } else {
-      alert("Code incorrect ! L'accès à cette classe est restreint.");
+      if (codeErr) codeErr.style.display = "block";
+      if (codeInput) codeInput.focus();
       return;
     }
   }
