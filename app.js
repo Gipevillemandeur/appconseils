@@ -178,9 +178,9 @@ async function loadMeta() {
           })
       );
     }
-    if (sheetNames.includes("Direction")) {
+    if (sheetNames.includes("direction")) {
       promises.push(
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("Direction")}!A:A?key=${apiKey}`)
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("direction")}!A:A?key=${apiKey}`)
           .then(r => r.json()).then(json => {
             if (json.values) setPrincipalOptions(json.values.flat().slice(1));
           })
