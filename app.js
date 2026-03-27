@@ -236,26 +236,39 @@ function showAccueilErreur() {
   document.getElementById("accueil-erreur").style.display     = "block";
 }
 
-document.getElementById("accueil-classe").addEventListener("change", (e) => {
+function updateAccueilBtn() {
   const btn       = document.getElementById("accueil-btn-commencer");
   const codeWrap  = document.getElementById("accueil-code-wrap");
   const codeInput = document.getElementById("accueil-code");
   const codeErr   = document.getElementById("accueil-code-erreur");
-  const classe    = e.target.value;
+  const classe    = document.getElementById("accueil-classe").value;
+  const trim      = document.getElementById("accueil-trim").value;
+  const date      = document.getElementById("accueil-date").value;
+
+  // Afficher/cacher le champ code selon la classe choisie
   if (classe) {
     const codeRaw = classCodes[classe];
     const aUnCode = codeRaw && codeRaw.toString().trim() !== "";
     codeWrap.style.display = aUnCode ? "flex" : "none";
-    codeInput.value = "";
-    codeErr.style.display = "none";
-    btn.disabled = false;
-    btn.textContent = "Commencer ➜";
+    if (!aUnCode) { codeInput.value = ""; codeErr.style.display = "none"; }
   } else {
     codeWrap.style.display = "none";
-    btn.disabled = true;
-    btn.textContent = "Sélectionnez une classe…";
+    codeInput.value = "";
+    codeErr.style.display = "none";
   }
-});
+
+  // Activer le bouton seulement si tout est rempli
+  const tout = classe && trim && date;
+  btn.disabled = !tout;
+  if (!classe) btn.textContent = "Sélectionnez une classe…";
+  else if (!trim) btn.textContent = "Sélectionnez un trimestre…";
+  else if (!date) btn.textContent = "Sélectionnez une date…";
+  else btn.textContent = "Commencer ➜";
+}
+
+document.getElementById("accueil-classe").addEventListener("change", updateAccueilBtn);
+document.getElementById("accueil-trim").addEventListener("change", updateAccueilBtn);
+document.getElementById("accueil-date").addEventListener("change", updateAccueilBtn);
 
 document.getElementById("accueil-btn-commencer").addEventListener("click", async () => {
   const classe    = document.getElementById("accueil-classe").value;
