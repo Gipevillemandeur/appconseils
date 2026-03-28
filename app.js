@@ -452,9 +452,12 @@ async function generatePDF() {
     doc.setTextColor(...colorInk);
     let x = margin;
     cells.forEach(([text, w, align]) => {
-      const tx = align === "center" ? x + w / 2 : x + 2;
       const lines = doc.splitTextToSize(text || "-", w - 3);
-      doc.text(lines[0], tx, y + 5, { align: align || "left" });
+      if (align === "center") {
+        doc.text(lines[0], x + w / 2, y + rowH / 2 + 1.5, { align: "center", baseline: "middle" });
+      } else {
+        doc.text(lines[0], x + 2, y + rowH / 2 + 1.5, { baseline: "middle" });
+      }
       x += w;
     });
     return y + rowH;
@@ -560,9 +563,12 @@ async function generatePDF() {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...colorInk);
-  doc.text(doc.splitTextToSize(parents, 58), margin + 2, y + 4);
-  doc.text(doc.splitTextToSize(students, 58), margin + 64, y + 4);
-  doc.text(doc.splitTextToSize(others, 58), margin + 128, y + 4);
+  const col1x = margin + 2;
+  const col2x = margin + 62 + 2;
+  const col3x = margin + 124 + 2;
+  doc.text(doc.splitTextToSize(parents, 58), col1x, y + 4);
+  doc.text(doc.splitTextToSize(students, 58), col2x, y + 4);
+  doc.text(doc.splitTextToSize(others, 58), col3x, y + 4);
   y += partH + 4;
 
   // ============ PAGE 2 ============
@@ -573,11 +579,11 @@ async function generatePDF() {
 
   // Synthese
   y = drawSectionTitle("Synthese", y);
-  const colsSynth = [["Felicitations", 32], ["Compliments", 32], ["Encouragements", 32], ["Av. comportement", 32], ["Av. travail", 32], ["Av. assiduite", 26]];
+  const colsSynth = [["Felicitations", 31], ["Compliments", 31], ["Encouragements", 31], ["Av. comportement", 31], ["Av. travail", 31], ["Av. assiduite", 31]];
   y = drawTableHeader(colsSynth, y);
   y = drawTableRow([
-    [fel, 32, "center"], [comp, 32, "center"], [enc, 32, "center"],
-    [avc, 32, "center"], [avt, 32, "center"], [ava, 26, "center"]
+    [fel, 31, "center"], [comp, 31, "center"], [enc, 31, "center"],
+    [avc, 31, "center"], [avt, 31, "center"], [ava, 31, "center"]
   ], y, 8);
   y += 6;
 
