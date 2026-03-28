@@ -428,7 +428,7 @@ async function generatePDF() {
     return y + 8;
   }
 
-  function drawTableHeader(cols, y, heights = 6) {
+  function drawTableHeader(cols, y, heights = 6, centered = false) {
     doc.setFillColor(...colorHeader);
     doc.setDrawColor(...colorLine);
     doc.rect(margin, y, colW, heights, "FD");
@@ -437,7 +437,11 @@ async function generatePDF() {
     doc.setTextColor(...colorMuted);
     let x = margin;
     cols.forEach(([label, w]) => {
-      doc.text(label.toUpperCase(), x + 2, y + 4);
+      if (centered) {
+        doc.text(label.toUpperCase(), x + w / 2, y + heights / 2 + 1, { align: "center", baseline: "middle" });
+      } else {
+        doc.text(label.toUpperCase(), x + 2, y + 4);
+      }
       x += w;
     });
     return y + heights;
@@ -580,7 +584,7 @@ async function generatePDF() {
   // Synthese
   y = drawSectionTitle("Synthese", y);
   const colsSynth = [["Felicitations", 31], ["Compliments", 31], ["Encouragements", 31], ["Av. comportement", 31], ["Av. travail", 31], ["Av. assiduite", 31]];
-  y = drawTableHeader(colsSynth, y);
+  y = drawTableHeader(colsSynth, y, 6, true);
   y = drawTableRow([
     [fel, 31, "center"], [comp, 31, "center"], [enc, 31, "center"],
     [avc, 31, "center"], [avt, 31, "center"], [ava, 31, "center"]
