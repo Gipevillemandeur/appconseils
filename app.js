@@ -354,23 +354,23 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  const classe    = classSelect.value || "—";
-  const trimestre = document.getElementById("input-term").value || "—";
+  const classe    = classSelect.value || "-";
+  const trimestre = document.getElementById("input-term").value || "-";
   const date      = formatDate(document.getElementById("input-date").value);
-  const principal = document.getElementById("input-principal").value || "—";
-  const parents   = document.getElementById("input-parents").value || "—";
-  const students  = document.getElementById("input-students").value || "—";
-  const others    = document.getElementById("input-others").value || "—";
-  const fel       = document.getElementById("input-fel").value || "—";
-  const comp      = document.getElementById("input-comp").value || "—";
-  const enc       = document.getElementById("input-enc").value || "—";
-  const avc       = document.getElementById("input-avc").value || "—";
-  const avt       = document.getElementById("input-avt").value || "—";
-  const ava       = document.getElementById("input-ava").value || "—";
-  const obsPrincipal = document.getElementById("input-obs-principal").value || "—";
-  const obsPP        = document.getElementById("input-obs-pp").value || "—";
-  const obsEleves    = document.getElementById("input-obs-eleves").value || "—";
-  const obsParents   = document.getElementById("input-obs-parents").value || "—";
+  const principal = document.getElementById("input-principal").value || "-";
+  const parents   = document.getElementById("input-parents").value || "-";
+  const students  = document.getElementById("input-students").value || "-";
+  const others    = document.getElementById("input-others").value || "-";
+  const fel       = document.getElementById("input-fel").value || "-";
+  const comp      = document.getElementById("input-comp").value || "-";
+  const enc       = document.getElementById("input-enc").value || "-";
+  const avc       = document.getElementById("input-avc").value || "-";
+  const avt       = document.getElementById("input-avt").value || "-";
+  const ava       = document.getElementById("input-ava").value || "-";
+  const obsPrincipal = document.getElementById("input-obs-principal").value || "-";
+  const obsPP        = document.getElementById("input-obs-pp").value || "-";
+  const obsEleves    = document.getElementById("input-obs-eleves").value || "-";
+  const obsParents   = document.getElementById("input-obs-parents").value || "-";
 
   const pageW = 210;
   const pageH = 297;
@@ -395,21 +395,21 @@ async function generatePDF() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...colorInk);
-    doc.text("COMPTE RENDU DES PARENTS DÉLÉGUÉS", pageW / 2, yStart + 7, { align: "center" });
+    doc.text("COMPTE RENDU DES PARENTS DELEGUES", pageW / 2, yStart + 7, { align: "center" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...colorAccent);
-    doc.text(`Conseil de classe ${classe} · ${trimestre}`, pageW / 2, yStart + 13, { align: "center" });
+    doc.text(`Conseil de classe ${classe} - ${trimestre}`, pageW / 2, yStart + 13, { align: "center" });
 
     doc.setTextColor(...colorMuted);
     doc.text(date, pageW / 2, yStart + 18, { align: "center" });
 
-    // Logos (texte de remplacement si images non chargées)
+    // Logos
     doc.setFontSize(7);
     doc.setTextColor(...colorAccent);
-    doc.text("ACADÉMIE / ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
-    doc.text("PARENTS DÉLÉGUÉS", pageW - margin - 8, yStart + 10, { align: "center" });
+    doc.text("ACADEMIE / ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
+    doc.text("PARENTS DELEGUES", pageW - margin - 8, yStart + 10, { align: "center" });
 
     return yStart + 28;
   }
@@ -449,7 +449,7 @@ async function generatePDF() {
     let x = margin;
     cells.forEach(([text, w, align]) => {
       const tx = align === "center" ? x + w / 2 : x + 2;
-      const lines = doc.splitTextToSize(text || "—", w - 3);
+      const lines = doc.splitTextToSize(text || "-", w - 3);
       doc.text(lines[0], tx, y + 5, { align: align || "left" });
       x += w;
     });
@@ -457,10 +457,10 @@ async function generatePDF() {
   }
 
   function drawTextBlock(title, text, y) {
-    const lines = doc.splitTextToSize(text || "—", colW - 6);
+    const lines = doc.splitTextToSize(text || "-", colW - 6);
     const blockH = Math.max(14, lines.length * 4 + 8);
 
-    // Vérifier si on dépasse la page
+    // Verifier si on depasse la page
     if (y + blockH > pageH - margin) {
       doc.addPage();
       y = drawHeader(margin) + 4;
@@ -485,17 +485,17 @@ async function generatePDF() {
   y = drawHeader(y);
   y += 2;
 
-  // Président de séance
-  y = drawSectionTitle("Président(e) de séance", y);
+  // President de seance
+  y = drawSectionTitle("President(e) de seance", y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...colorInk);
   doc.text(principal, margin + 3, y + 4);
   y += 8;
 
-  // Équipe pédagogique
-  y = drawSectionTitle("Équipe pédagogique", y);
-  const colsProfs = [["Matière", 70], ["Professeur(s)", 100], ["Présent", 16]];
+  // Equipe pedagogique
+  y = drawSectionTitle("Equipe pedagogique", y);
+  const colsProfs = [["Matiere", 70], ["Professeur(s)", 100], ["Present", 16]];
   y = drawTableHeader(colsProfs, y);
 
   const rows = document.querySelectorAll("#subjects-form .row:not(.header)");
@@ -505,11 +505,11 @@ async function generatePDF() {
     const bg = i % 2 === 0 ? null : [248, 250, 252];
     const presColor = presence === "Oui" ? [39, 174, 96] : [231, 76, 60];
     y = drawTableRow([
-      [inputs[0]?.value || "—", 70],
-      [inputs[1]?.value || "—", 100],
+      [inputs[0]?.value || "-", 70],
+      [inputs[1]?.value || "-", 100],
       [presence, 16, "center"]
     ], y, 6, bg);
-    // Coloriser Présent
+    // Coloriser Present
     doc.setTextColor(...presColor);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
@@ -522,7 +522,7 @@ async function generatePDF() {
 
   // Participants
   y = drawSectionTitle("Participants", y);
-  const colsPart = [["Parents délégués", 62], ["Élèves délégués", 62], ["Autres", 62]];
+  const colsPart = [["Parents delegues", 62], ["Eleves delegues", 62], ["Autres", 62]];
   y = drawTableHeader(colsPart, y);
 
   const maxLines = Math.max(
@@ -549,9 +549,9 @@ async function generatePDF() {
   y = drawHeader(y);
   y += 4;
 
-  // Synthèse
-  y = drawSectionTitle("Synthèse", y);
-  const colsSynth = [["Félicitations", 32], ["Compliments", 32], ["Encouragements", 32], ["Av. comportement", 32], ["Av. travail", 32], ["Av. assiduité", 26]];
+  // Synthese
+  y = drawSectionTitle("Synthese", y);
+  const colsSynth = [["Felicitations", 32], ["Compliments", 32], ["Encouragements", 32], ["Av. comportement", 32], ["Av. travail", 32], ["Av. assiduite", 26]];
   y = drawTableHeader(colsSynth, y);
   y = drawTableRow([
     [fel, 32, "center"], [comp, 32, "center"], [enc, 32, "center"],
@@ -560,12 +560,12 @@ async function generatePDF() {
   y += 6;
 
   // Observations
-  y = drawSectionTitle("Observations générales", y);
+  y = drawSectionTitle("Observations generales", y);
   y += 4;
   y = drawTextBlock("Direction / Principal(e)", obsPrincipal, y);
   y = drawTextBlock("Professeur principal", obsPP, y);
-  y = drawTextBlock("Élèves délégués", obsEleves, y);
-  y = drawTextBlock("Parents délégués", obsParents, y);
+  y = drawTextBlock("Eleves delegues", obsEleves, y);
+  y = drawTextBlock("Parents delegues", obsParents, y);
 
   // Sauvegarde
   const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
