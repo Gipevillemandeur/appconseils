@@ -514,27 +514,31 @@ async function generatePDF() {
   rows.forEach((row, i) => {
     const inputs   = row.querySelectorAll("input");
     const presence = row._getPresence ? row._getPresence() : "Oui";
-    const bg = i % 2 === 0 ? null : [248, 250, 252];
+    const bg = i % 2 === 0 ? [255,255,255] : [248, 250, 252];
     const presColor = presence === "Oui" ? [39, 174, 96] : [231, 76, 60];
 
-    // Dessiner la ligne sans la colonne Present
-    if (bg) { doc.setFillColor(...bg); doc.rect(margin, y, colW, 6, "F"); }
+    // Fond de la ligne
+    doc.setFillColor(...bg);
     doc.setDrawColor(...colorLine);
-    doc.rect(margin, y, colW, 6);
+    doc.rect(margin, y, colW, 6, "FD");
+
+    // Matiere et prof
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...colorInk);
     doc.text(doc.splitTextToSize(inputs[0]?.value || "-", 67)[0], margin + 2, y + 4);
-    doc.text(doc.splitTextToSize(inputs[1]?.value || "-", 97)[0], margin + 72, y + 4);
+    doc.text(doc.splitTextToSize(inputs[1]?.value || "-", 95)[0], margin + 73, y + 4);
 
-    // Present en couleur
+    // Present en couleur (sans doublon)
     doc.setTextColor(...presColor);
     doc.setFont("helvetica", "bold");
-    doc.text(presence, margin + 178, y + 4, { align: "center" });
-    doc.setTextColor(...colorInk);
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text(presence, pageW - margin - 8, y + 4, { align: "center" });
+
     y += 6;
   });
+  doc.setTextColor(...colorInk);
+  doc.setFont("helvetica", "normal");
 
   y += 4;
 
