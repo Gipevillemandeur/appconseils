@@ -438,9 +438,9 @@ async function generatePDF() {
     let x = margin;
     cols.forEach(([label, w]) => {
       if (centered) {
-        doc.text(label.toUpperCase(), x + w / 2, y + heights / 2 + 1, { align: "center", baseline: "middle" });
+        doc.text(label.toUpperCase(), x + w / 2, y + 4.5, { align: "center" });
       } else {
-        doc.text(label.toUpperCase(), x + 2, y + 4);
+        doc.text(label.toUpperCase(), x + 2, y + 4.5);
       }
       x += w;
     });
@@ -452,15 +452,15 @@ async function generatePDF() {
     doc.setDrawColor(...colorLine);
     doc.rect(margin, y, colW, rowH);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.setTextColor(...colorInk);
     let x = margin;
     cells.forEach(([text, w, align]) => {
-      const lines = doc.splitTextToSize(text || "-", w - 3);
+      const lines = doc.splitTextToSize(text || "-", w - 2);
       if (align === "center") {
-        doc.text(lines[0], x + w / 2, y + rowH / 2 + 1.5, { align: "center", baseline: "middle" });
+        doc.text(lines[0], x + w / 2, y + rowH / 2 + 1, { align: "center" });
       } else {
-        doc.text(lines[0], x + 2, y + rowH / 2 + 1.5, { baseline: "middle" });
+        doc.text(lines[0], x + 2, y + rowH / 2 + 1);
       }
       x += w;
     });
