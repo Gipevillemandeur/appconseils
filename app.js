@@ -385,33 +385,37 @@ async function generatePDF() {
   const colorInk     = [27, 31, 36];     // #1b1f24
 
   // ---- Fonction utilitaires ----
-  function drawHeader(yStart) {
+  function drawHeader(yStart, logoAcad, logoParents) {
     // Fond header
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(...colorLine);
-    doc.roundedRect(margin, yStart, colW, 24, 3, 3, "FD");
+    doc.roundedRect(margin, yStart, colW, 28, 3, 3, "FD");
+
+    // Logo academie (gauche)
+    if (logoAcad) {
+      doc.addImage(logoAcad, "PNG", margin + 2, yStart + 2, 22, 22);
+    }
+
+    // Logo parents (droite)
+    if (logoParents) {
+      doc.addImage(logoParents, "PNG", pageW - margin - 24, yStart + 2, 22, 22);
+    }
 
     // Titre centre
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...colorInk);
-    doc.text("COMPTE RENDU DES PARENTS DELEGUES", pageW / 2, yStart + 7, { align: "center" });
+    doc.text("COMPTE RENDU DES PARENTS DELEGUES", pageW / 2, yStart + 8, { align: "center" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...colorAccent);
-    doc.text(`Conseil de classe ${classe} - ${trimestre}`, pageW / 2, yStart + 13, { align: "center" });
+    doc.text(`Conseil de classe ${classe} - ${trimestre}`, pageW / 2, yStart + 15, { align: "center" });
 
     doc.setTextColor(...colorMuted);
-    doc.text(date, pageW / 2, yStart + 18, { align: "center" });
+    doc.text(date, pageW / 2, yStart + 21, { align: "center" });
 
-    // Logos
-    doc.setFontSize(7);
-    doc.setTextColor(...colorAccent);
-    doc.text("ACADEMIE / ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
-    doc.text("PARENTS DELEGUES", pageW - margin - 8, yStart + 10, { align: "center" });
-
-    return yStart + 28;
+    return yStart + 32;
   }
 
   function drawSectionTitle(text, y) {
@@ -480,9 +484,17 @@ async function generatePDF() {
     return y + blockH + 3;
   }
 
+  // Chargement des logos
+  let logoAcad = null;
+  let logoParents = null;
+  try {
+    logoAcad    = await imageToBase64("assets/logo-academie.svg");
+    logoParents = await imageToBase64("assets/logo-parents.png");
+  } catch(e) { console.warn("Logos non charges", e); }
+
   // ============ PAGE 1 ============
   let y = margin;
-  y = drawHeader(y);
+  y = drawHeader(y, logoAcad, logoParents);
   y += 2;
 
   // President de seance
@@ -504,18 +516,24 @@ async function generatePDF() {
     const presence = row._getPresence ? row._getPresence() : "Oui";
     const bg = i % 2 === 0 ? null : [248, 250, 252];
     const presColor = presence === "Oui" ? [39, 174, 96] : [231, 76, 60];
-    y = drawTableRow([
-      [inputs[0]?.value || "-", 70],
-      [inputs[1]?.value || "-", 100],
-      [presence, 16, "center"]
-    ], y, 6, bg);
-    // Coloriser Present
+
+    // Dessiner la ligne sans la colonne Present
+    if (bg) { doc.setFillColor(...bg); doc.rect(margin, y, colW, 6, "F"); }
+    doc.setDrawColor(...colorLine);
+    doc.rect(margin, y, colW, 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...colorInk);
+    doc.text(doc.splitTextToSize(inputs[0]?.value || "-", 67)[0], margin + 2, y + 4);
+    doc.text(doc.splitTextToSize(inputs[1]?.value || "-", 97)[0], margin + 72, y + 4);
+
+    // Present en couleur
     doc.setTextColor(...presColor);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(presence, margin + 70 + 100 + 8, y - 2, { align: "center" });
+    doc.text(presence, margin + 178, y + 4, { align: "center" });
     doc.setTextColor(...colorInk);
     doc.setFont("helvetica", "normal");
+    y += 6;
   });
 
   y += 4;
@@ -546,7 +564,7 @@ async function generatePDF() {
   // ============ PAGE 2 ============
   doc.addPage();
   y = margin;
-  y = drawHeader(y);
+  y = drawHeader(y, logoAcad, logoParents);
   y += 4;
 
   // Synthese
