@@ -391,12 +391,10 @@ async function generatePDF() {
     doc.setDrawColor(...colorLine);
     doc.roundedRect(margin, yStart, colW, 28, 3, 3, "FD");
 
-    // Logo academie (texte car SVG non supporte)
-    doc.setFontSize(7);
-    doc.setTextColor(...colorAccent);
-    doc.setFont("helvetica", "bold");
-    doc.text("ACADEMIE", margin + 13, yStart + 10, { align: "center" });
-    doc.text("ORL-TOURS", margin + 13, yStart + 15, { align: "center" });
+    // Logo academie (gauche)
+    if (logoAcad) {
+      doc.addImage(logoAcad, "PNG", margin + 2, yStart + 2, 22, 22);
+    }
 
     // Logo parents (droite)
     if (logoParents) {
@@ -486,12 +484,13 @@ async function generatePDF() {
     return y + blockH + 3;
   }
 
-  // Chargement des logos (SVG non supporte par jsPDF, on charge uniquement le PNG)
+  // Chargement des deux logos PNG
   let logoAcad = null;
   let logoParents = null;
   try {
+    logoAcad    = await imageToBase64("assets/logo-academie.png");
     logoParents = await imageToBase64("assets/logo-parents.png");
-  } catch(e) { console.warn("Logo parents non charge", e); }
+  } catch(e) { console.warn("Logos non charges", e); }
 
   // ============ PAGE 1 ============
   let y = margin;
