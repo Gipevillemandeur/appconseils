@@ -305,6 +305,11 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
   document.getElementById("input-term-display").value = trimestre;
   document.getElementById("input-date-display").value = formatDate(date);
 
+  // Forcer la mise à jour de l'aperçu (les events ne se déclenchent pas sur setValue)
+  setPreview("preview-title", `Conseil de classe ${classe || "—"}`);
+  setPreview("preview-term", trimestre || "—");
+  setPreview("header-date", formatDate(date));
+
   await loadClasseData(classe);
 });
 
