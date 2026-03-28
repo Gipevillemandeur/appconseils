@@ -335,17 +335,244 @@ classSelect.addEventListener("change", async (e) => {
 // ============================================================
 //  BOUTONS
 // ============================================================
-document.getElementById("print").addEventListener("click", () => {
-  if (confirm("Attention : veuillez bien sélectionner 'Enregistrer au format PDF' pour l'envoi au GIPE.")) {
-    const classe    = classSelect.value || "Classe";
-    const trimestre = document.getElementById("input-term").value || "Trimestre";
-    const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
-    const originalTitle = document.title;
-    document.title = nomFichier;
-    window.print();
-    setTimeout(() => { document.title = originalTitle; }, 1000);
+// ============================================================
+//  GÉNÉRATION PDF
+// ============================================================
+document.getElementById("print").addEventListener("click", () => generatePDF());
+
+async function imageToBase64(url) {
+  const resp = await fetch(url);
+  const blob = await resp.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  const classe    = classSelect.value || "—";
+  const trimestre = document.getElementById("input-term").value || "—";
+  const date      = formatDate(document.getElementById("input-date").value);
+  const principal = document.getElementById("input-principal").value || "—";
+  const parents   = document.getElementById("input-parents").value || "—";
+  const students  = document.getElementById("input-students").value || "—";
+  const others    = document.getElementById("input-others").value || "—";
+  const fel       = document.getElementById("input-fel").value || "—";
+  const comp      = document.getElementById("input-comp").value || "—";
+  const enc       = document.getElementById("input-enc").value || "—";
+  const avc       = document.getElementById("input-avc").value || "—";
+  const avt       = document.getElementById("input-avt").value || "—";
+  const ava       = document.getElementById("input-ava").value || "—";
+  const obsPrincipal = document.getElementById("input-obs-principal").value || "—";
+  const obsPP        = document.getElementById("input-obs-pp").value || "—";
+  const obsEleves    = document.getElementById("input-obs-eleves").value || "—";
+  const obsParents   = document.getElementById("input-obs-parents").value || "—";
+
+  const pageW = 210;
+  const pageH = 297;
+  const margin = 12;
+  const colW = pageW - margin * 2;
+
+  // Couleurs
+  const colorAccent  = [31, 111, 139];   // #1f6f8b
+  const colorMuted   = [93, 107, 123];   // #5d6b7b
+  const colorLine    = [214, 221, 229];  // #d6dde5
+  const colorHeader  = [240, 244, 247];  // #f0f4f7
+  const colorInk     = [27, 31, 36];     // #1b1f24
+
+  // ---- Fonction utilitaires ----
+  function drawHeader(yStart) {
+    // Fond header
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...colorLine);
+    doc.roundedRect(margin, yStart, colW, 24, 3, 3, "FD");
+
+    // Titre centre
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...colorInk);
+    doc.text("COMPTE RENDU DES PARENTS DÉLÉGUÉS", pageW / 2, yStart + 7, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...colorAccent);
+    doc.text(`Conseil de classe ${classe} · ${trimestre}`, pageW / 2, yStart + 13, { align: "center" });
+
+    doc.setTextColor(...colorMuted);
+    doc.text(date, pageW / 2, yStart + 18, { align: "center" });
+
+    // Logos (texte de remplacement si images non chargées)
+    doc.setFontSize(7);
+    doc.setTextColor(...colorAccent);
+    doc.text("ACADÉMIE
+ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
+    doc.text("PARENTS
+DÉLÉGUÉS", pageW - margin - 8, yStart + 10, { align: "center" });
+
+    return yStart + 28;
   }
-});
+
+  function drawSectionTitle(text, y) {
+    doc.setFillColor(...colorAccent);
+    doc.rect(margin, y, colW, 6, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text(text.toUpperCase(), margin + 3, y + 4);
+    return y + 8;
+  }
+
+  function drawTableHeader(cols, y, heights = 6) {
+    doc.setFillColor(...colorHeader);
+    doc.setDrawColor(...colorLine);
+    doc.rect(margin, y, colW, heights, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...colorMuted);
+    let x = margin;
+    cols.forEach(([label, w]) => {
+      doc.text(label.toUpperCase(), x + 2, y + 4);
+      x += w;
+    });
+    return y + heights;
+  }
+
+  function drawTableRow(cells, y, rowH = 7, bg = null) {
+    if (bg) { doc.setFillColor(...bg); doc.rect(margin, y, colW, rowH, "F"); }
+    doc.setDrawColor(...colorLine);
+    doc.rect(margin, y, colW, rowH);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...colorInk);
+    let x = margin;
+    cells.forEach(([text, w, align]) => {
+      const tx = align === "center" ? x + w / 2 : x + 2;
+      const lines = doc.splitTextToSize(text || "—", w - 3);
+      doc.text(lines[0], tx, y + 5, { align: align || "left" });
+      x += w;
+    });
+    return y + rowH;
+  }
+
+  function drawTextBlock(title, text, y) {
+    const lines = doc.splitTextToSize(text || "—", colW - 6);
+    const blockH = Math.max(14, lines.length * 4 + 8);
+
+    // Vérifier si on dépasse la page
+    if (y + blockH > pageH - margin) {
+      doc.addPage();
+      y = drawHeader(margin) + 4;
+    }
+
+    doc.setDrawColor(...colorLine);
+    doc.setFillColor(250, 251, 252);
+    doc.roundedRect(margin, y, colW, blockH, 2, 2, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...colorMuted);
+    doc.text(title.toUpperCase(), margin + 3, y + 4);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...colorInk);
+    doc.text(lines, margin + 3, y + 9);
+    return y + blockH + 3;
+  }
+
+  // ============ PAGE 1 ============
+  let y = margin;
+  y = drawHeader(y);
+  y += 2;
+
+  // Président de séance
+  y = drawSectionTitle("Président(e) de séance", y);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...colorInk);
+  doc.text(principal, margin + 3, y + 4);
+  y += 8;
+
+  // Équipe pédagogique
+  y = drawSectionTitle("Équipe pédagogique", y);
+  const colsProfs = [["Matière", 70], ["Professeur(s)", 100], ["Présent", 16]];
+  y = drawTableHeader(colsProfs, y);
+
+  const rows = document.querySelectorAll("#subjects-form .row:not(.header)");
+  rows.forEach((row, i) => {
+    const inputs   = row.querySelectorAll("input");
+    const presence = row._getPresence ? row._getPresence() : "Oui";
+    const bg = i % 2 === 0 ? null : [248, 250, 252];
+    const presColor = presence === "Oui" ? [39, 174, 96] : [231, 76, 60];
+    y = drawTableRow([
+      [inputs[0]?.value || "—", 70],
+      [inputs[1]?.value || "—", 100],
+      [presence, 16, "center"]
+    ], y, 6, bg);
+    // Coloriser Présent
+    doc.setTextColor(...presColor);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text(presence, margin + 70 + 100 + 8, y - 2, { align: "center" });
+    doc.setTextColor(...colorInk);
+    doc.setFont("helvetica", "normal");
+  });
+
+  y += 4;
+
+  // Participants
+  y = drawSectionTitle("Participants", y);
+  const colsPart = [["Parents délégués", 62], ["Élèves délégués", 62], ["Autres", 62]];
+  y = drawTableHeader(colsPart, y);
+
+  const maxLines = Math.max(
+    parents.split("\n").length,
+    students.split("\n").length,
+    others.split("\n").length,
+    1
+  );
+  const partH = Math.max(10, maxLines * 4 + 4);
+  doc.setFillColor(255,255,255);
+  doc.setDrawColor(...colorLine);
+  doc.rect(margin, y, colW, partH, "FD");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...colorInk);
+  doc.text(doc.splitTextToSize(parents, 58), margin + 2, y + 4);
+  doc.text(doc.splitTextToSize(students, 58), margin + 64, y + 4);
+  doc.text(doc.splitTextToSize(others, 58), margin + 128, y + 4);
+  y += partH + 4;
+
+  // ============ PAGE 2 ============
+  doc.addPage();
+  y = margin;
+  y = drawHeader(y);
+  y += 4;
+
+  // Synthèse
+  y = drawSectionTitle("Synthèse", y);
+  const colsSynth = [["Félicitations", 32], ["Compliments", 32], ["Encouragements", 32], ["Av. comportement", 32], ["Av. travail", 32], ["Av. assiduité", 26]];
+  y = drawTableHeader(colsSynth, y);
+  y = drawTableRow([
+    [fel, 32, "center"], [comp, 32, "center"], [enc, 32, "center"],
+    [avc, 32, "center"], [avt, 32, "center"], [ava, 26, "center"]
+  ], y, 8);
+  y += 6;
+
+  // Observations
+  y = drawSectionTitle("Observations générales", y);
+  y += 4;
+  y = drawTextBlock("Direction / Principal(e)", obsPrincipal, y);
+  y = drawTextBlock("Professeur principal", obsPP, y);
+  y = drawTextBlock("Élèves délégués", obsEleves, y);
+  y = drawTextBlock("Parents délégués", obsParents, y);
+
+  // Sauvegarde
+  const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
+  doc.save(`${nomFichier}.pdf`);
+}
 
 document.getElementById("listing-eleves").addEventListener("click", () => {
   const classe = classSelect.value;
