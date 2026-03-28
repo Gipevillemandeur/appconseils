@@ -408,10 +408,8 @@ async function generatePDF() {
     // Logos (texte de remplacement si images non chargées)
     doc.setFontSize(7);
     doc.setTextColor(...colorAccent);
-    doc.text("ACADÉMIE
-ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
-    doc.text("PARENTS
-DÉLÉGUÉS", pageW - margin - 8, yStart + 10, { align: "center" });
+    doc.text("ACADÉMIE / ORL-TOURS", margin + 8, yStart + 10, { align: "center" });
+    doc.text("PARENTS DÉLÉGUÉS", pageW - margin - 8, yStart + 10, { align: "center" });
 
     return yStart + 28;
   }
