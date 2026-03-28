@@ -376,6 +376,28 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
+//  ONGLETS MOBILE
+// ============================================================
+function switchTab(tab) {
+  const formPanel    = document.querySelector(".form-panel");
+  const previewPanel = document.querySelector(".preview-panel");
+  const tabSaisie    = document.getElementById("tab-saisie");
+  const tabApercu    = document.getElementById("tab-apercu");
+
+  if (tab === "saisie") {
+    formPanel.classList.remove("mobile-hidden");
+    previewPanel.classList.remove("mobile-visible");
+    tabSaisie.classList.add("active");
+    tabApercu.classList.remove("active");
+  } else {
+    formPanel.classList.add("mobile-hidden");
+    previewPanel.classList.add("mobile-visible");
+    tabSaisie.classList.remove("active");
+    tabApercu.classList.add("active");
+  }
+}
+
+// ============================================================
 //  DÉMARRAGE
 // ============================================================
 setupBindings();

@@ -548,3 +548,137 @@ body {
   cursor: not-allowed;
   width: 100%;
 }
+
+/* ============================================================
+   RESPONSIVE MOBILE
+   ============================================================ */
+
+/* Onglets mobile — cachés sur desktop */
+.mobile-tabs {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  /* --- GÉNÉRAL --- */
+  .app {
+    padding: 10px;
+  }
+
+  /* --- HEADER --- */
+  .app-header {
+    grid-template-columns: 1fr 1fr;
+    padding: 8px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .app-header .title {
+    display: none;
+  }
+
+  .logo {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  /* --- ONGLETS --- */
+  .mobile-tabs {
+    display: flex;
+    gap: 0;
+    margin: 10px 0 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  .mobile-tab {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    background: var(--paper);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mobile-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* --- GRILLE : une colonne, onglets pour switcher --- */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 8px;
+  }
+
+  /* Panneau aperçu caché par défaut sur mobile */
+  .preview-panel {
+    display: none;
+  }
+
+  .preview-panel.mobile-visible {
+    display: block;
+  }
+
+  .form-panel.mobile-hidden {
+    display: none;
+  }
+
+  /* --- PANEL HEADER --- */
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .actions-container {
+    width: 100%;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* --- GRILLES DE CHAMPS --- */
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-grid.six {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* --- CHAMPS --- */
+  .field input, .field textarea, .field select, .field-readonly {
+    font-size: 16px; /* Évite le zoom auto sur iOS */
+  }
+
+  /* --- TABLEAU MATIÈRES --- */
+  .table .row {
+    grid-template-columns: 1.2fr 1.4fr 44px;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  /* --- ACCUEIL --- */
+  .accueil-card {
+    padding: 24px 20px;
+  }
+
+  .accueil-titre {
+    font-size: 18px;
+  }
+}
