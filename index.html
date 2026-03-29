@@ -351,73 +351,34 @@
       }
       .btn-annuler { background: #f4f6f8; color: #5d6b7b; }
       .btn-confirmer { background: #1f6f8b; color: #fff; }
+      .apercu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+      .apercu-loading { color: #5d6b7b; font-size: 13px; }
+      .apercu-card { max-width: 700px; }
     </style>
     <!-- Modale aperçu PDF -->
     <div id="modal-apercu">
       <div class="apercu-card">
-        <div class="apercu-title">📄 Aperçu avant génération du PDF</div>
-
-        <div class="apercu-section">
-          <div class="apercu-label">Classe · Trimestre · Date</div>
-          <div class="apercu-value" id="ap-entete">—</div>
+        <div class="apercu-header">
+          <div class="apercu-title">📄 Aperçu du compte rendu</div>
+          <div id="apercu-loading" class="apercu-loading">⏳ Génération de l'aperçu…</div>
         </div>
 
-        <div class="apercu-section">
-          <div class="apercu-label">Président(e) de séance</div>
-          <div class="apercu-value" id="ap-principal">—</div>
-        </div>
+        <!-- Iframe pour afficher le PDF généré -->
+        <iframe id="apercu-iframe" style="display:none; width:100%; height:60vh; border:1px solid #d6dde5; border-radius:8px; margin: 12px 0;"></iframe>
 
-        <div class="apercu-section">
-          <div class="apercu-label">Équipe pédagogique</div>
-          <table class="apercu-table">
-            <thead><tr><th>Matière</th><th>Professeur(s)</th><th>Présent</th></tr></thead>
-            <tbody id="ap-profs"></tbody>
-          </table>
-        </div>
-
-        <div class="apercu-section">
-          <div class="apercu-label">Participants</div>
-          <table class="apercu-table">
-            <thead><tr><th>Parents délégués</th><th>Élèves délégués</th><th>Autres</th></tr></thead>
-            <tbody><tr>
-              <td id="ap-parents" style="white-space:pre-line">—</td>
-              <td id="ap-students" style="white-space:pre-line">—</td>
-              <td id="ap-others" style="white-space:pre-line">—</td>
-            </tr></tbody>
-          </table>
-        </div>
-
-        <div class="apercu-section">
-          <div class="apercu-label">Synthèse</div>
-          <table class="apercu-table">
-            <thead><tr><th>Fél.</th><th>Comp.</th><th>Enc.</th><th>Av.C</th><th>Av.T</th><th>Av.A</th></tr></thead>
-            <tbody><tr>
-              <td id="ap-fel">—</td><td id="ap-comp">—</td><td id="ap-enc">—</td>
-              <td id="ap-avc">—</td><td id="ap-avt">—</td><td id="ap-ava">—</td>
-            </tr></tbody>
-          </table>
-        </div>
-
-        <div class="apercu-section">
-          <div class="apercu-label">Observations — Direction</div>
-          <div class="apercu-value" id="ap-obs-dir">—</div>
-        </div>
-        <div class="apercu-section">
-          <div class="apercu-label">Observations — Prof Principal</div>
-          <div class="apercu-value" id="ap-obs-pp">—</div>
-        </div>
-        <div class="apercu-section">
-          <div class="apercu-label">Observations — Élèves</div>
-          <div class="apercu-value" id="ap-obs-el">—</div>
-        </div>
-        <div class="apercu-section">
-          <div class="apercu-label">Observations — Parents</div>
-          <div class="apercu-value" id="ap-obs-pa">—</div>
+        <!-- Lien de relecture -->
+        <div id="relecture-section" style="display:none; margin-bottom:12px;">
+          <div class="apercu-label" style="margin-bottom:6px;">🔗 Lien de relecture pour le 2ème parent</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="relecture-url" type="text" readonly style="flex:1; border:1px solid #d6dde5; border-radius:8px; padding:8px 10px; font-size:12px; background:#f4f6f8; color:#1b1f24;"/>
+            <button class="btn" onclick="copierLienRelecture()" style="white-space:nowrap; background:#f2a541; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-weight:700; cursor:pointer;">📋 Copier</button>
+          </div>
+          <div id="copie-confirmation" style="display:none; color:#27ae60; font-size:12px; margin-top:4px; font-weight:600;">✅ Lien copié !</div>
         </div>
 
         <div class="apercu-btns">
           <button class="btn btn-annuler" onclick="fermerApercu()">✏️ Corriger</button>
-          <button class="btn btn-confirmer" onclick="confirmerPDF()">📄 Générer le PDF</button>
+          <button class="btn btn-confirmer" onclick="confirmerPDF()">📥 Télécharger le PDF</button>
         </div>
       </div>
     </div>

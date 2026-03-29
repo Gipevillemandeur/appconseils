@@ -341,57 +341,150 @@ classSelect.addEventListener("change", async (e) => {
 // ============================================================
 document.getElementById("print").addEventListener("click", () => ouvrirApercu());
 
-function ouvrirApercu() {
-  const classe    = classSelect.value || "—";
-  const trimestre = document.getElementById("input-term").value || "—";
-  const date      = formatDate(document.getElementById("input-date").value);
-  const principal = document.getElementById("input-principal").value || "—";
-
-  // Entête
-  document.getElementById("ap-entete").textContent = `${classe} · ${trimestre} · ${date}`;
-  document.getElementById("ap-principal").textContent = principal;
-
-  // Profs
-  const tbody = document.getElementById("ap-profs");
-  tbody.innerHTML = "";
-  document.querySelectorAll("#subjects-form .row:not(.header)").forEach(row => {
-    const inputs   = row.querySelectorAll("input");
-    const presence = row._getPresence ? row._getPresence() : "Oui";
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${inputs[0]?.value || "—"}</td>
-      <td>${inputs[1]?.value || "—"}</td>
-      <td class="${presence === "Oui" ? "oui" : "non"}">${presence}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // Participants
-  document.getElementById("ap-parents").textContent  = document.getElementById("input-parents").value  || "—";
-  document.getElementById("ap-students").textContent = document.getElementById("input-students").value || "—";
-  document.getElementById("ap-others").textContent   = document.getElementById("input-others").value   || "—";
-
-  // Synthèse
-  ["fel","comp","enc","avc","avt","ava"].forEach(k => {
-    document.getElementById("ap-" + k).textContent = document.getElementById("input-" + k).value || "—";
-  });
-
-  // Observations
-  document.getElementById("ap-obs-dir").textContent = document.getElementById("input-obs-principal").value || "—";
-  document.getElementById("ap-obs-pp").textContent  = document.getElementById("input-obs-pp").value       || "—";
-  document.getElementById("ap-obs-el").textContent  = document.getElementById("input-obs-eleves").value   || "—";
-  document.getElementById("ap-obs-pa").textContent  = document.getElementById("input-obs-parents").value  || "—";
-
+async function ouvrirApercu() {
+  // Ouvrir la modale avec le spinner
   document.getElementById("modal-apercu").classList.add("open");
+  document.getElementById("apercu-loading").style.display = "block";
+  document.getElementById("apercu-iframe").style.display  = "none";
+  document.getElementById("relecture-section").style.display = "none";
+
+  // Générer le PDF en mémoire et l'afficher dans l'iframe
+  try {
+    const pdfBlob = await generatePDF(true); // true = aperçu seulement, pas de téléchargement
+    const url = URL.createObjectURL(pdfBlob);
+    const iframe = document.getElementById("apercu-iframe");
+    iframe.src = url;
+    iframe.style.display = "block";
+    document.getElementById("apercu-loading").style.display = "none";
+
+    // Générer le lien de relecture
+    const lien = genererLienRelecture();
+    if (lien) {
+      document.getElementById("relecture-url").value = lien;
+      document.getElementById("relecture-section").style.display = "block";
+    }
+  } catch(e) {
+    console.error("Erreur aperçu PDF", e);
+    document.getElementById("apercu-loading").textContent = "⚠️ Erreur lors de la génération de l'aperçu.";
+  }
 }
 
 function fermerApercu() {
   document.getElementById("modal-apercu").classList.remove("open");
+  // Libérer la mémoire de l'iframe
+  const iframe = document.getElementById("apercu-iframe");
+  if (iframe.src) URL.revokeObjectURL(iframe.src);
+  iframe.src = "";
 }
 
 function confirmerPDF() {
   fermerApercu();
-  generatePDF();
+  generatePDF(false); // false = télécharger
+}
+
+// ============================================================
+//  LIEN DE RELECTURE
+// ============================================================
+function genererLienRelecture() {
+  try {
+    const data = {
+      classe:       classSelect.value,
+      trimestre:    document.getElementById("input-term").value,
+      date:         document.getElementById("input-date").value,
+      principal:    document.getElementById("input-principal").value,
+      parents:      document.getElementById("input-parents").value,
+      students:     document.getElementById("input-students").value,
+      others:       document.getElementById("input-others").value,
+      fel:          document.getElementById("input-fel").value,
+      comp:         document.getElementById("input-comp").value,
+      enc:          document.getElementById("input-enc").value,
+      avc:          document.getElementById("input-avc").value,
+      avt:          document.getElementById("input-avt").value,
+      ava:          document.getElementById("input-ava").value,
+      obsPrincipal: document.getElementById("input-obs-principal").value,
+      obsPP:        document.getElementById("input-obs-pp").value,
+      obsEleves:    document.getElementById("input-obs-eleves").value,
+      obsParents:   document.getElementById("input-obs-parents").value,
+      presences:    Array.from(document.querySelectorAll("#subjects-form .row:not(.header)")).map(row => ({
+        matiere: row.querySelectorAll("input")[0]?.value || "",
+        prof:    row.querySelectorAll("input")[1]?.value || "",
+        present: row._getPresence ? row._getPresence() : "Oui"
+      }))
+    };
+
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    return `${window.location.origin}${window.location.pathname}?relecture=${encoded}`;
+  } catch(e) {
+    console.error("Erreur génération lien relecture", e);
+    return null;
+  }
+}
+
+function copierLienRelecture() {
+  const input = document.getElementById("relecture-url");
+  navigator.clipboard.writeText(input.value).then(() => {
+    const confirm = document.getElementById("copie-confirmation");
+    confirm.style.display = "block";
+    setTimeout(() => { confirm.style.display = "none"; }, 2500);
+  });
+}
+
+// Vérifier si on arrive depuis un lien de relecture
+function verifierLienRelecture() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("relecture");
+  if (!encoded) return false;
+
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (!data.classe) return false;
+
+    // Afficher directement en mode lecture seule
+    document.getElementById("screen-accueil").style.display = "none";
+    document.getElementById("screen-app").style.display     = "block";
+
+    // Remplir les champs
+    classSelect.value = data.classe;
+    document.getElementById("input-term").value = data.trimestre;
+    document.getElementById("input-date").value = data.date;
+    document.getElementById("input-class-display").value = data.classe;
+    document.getElementById("input-term-display").value  = data.trimestre;
+    document.getElementById("input-date-display").value  = formatDate(data.date);
+    setPreview("preview-title", `Conseil de classe ${data.classe}`);
+    setPreview("preview-term",  data.trimestre);
+    setPreview("header-date",   formatDate(data.date));
+
+    applyClassSubjects(data.presences || []);
+
+    const champs = [
+      ["input-parents", data.parents], ["input-students", data.students],
+      ["input-others", data.others], ["input-fel", data.fel],
+      ["input-comp", data.comp], ["input-enc", data.enc],
+      ["input-avc", data.avc], ["input-avt", data.avt], ["input-ava", data.ava],
+      ["input-obs-principal", data.obsPrincipal], ["input-obs-pp", data.obsPP],
+      ["input-obs-eleves", data.obsEleves], ["input-obs-parents", data.obsParents],
+    ];
+    champs.forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.value = val || ""; el.dispatchEvent(new Event("input")); }
+    });
+
+    setTimeout(() => {
+      const principalEl = document.getElementById("input-principal");
+      if (principalEl) { principalEl.value = data.principal || ""; principalEl.dispatchEvent(new Event("change")); }
+    }, 500);
+
+    // Afficher bannière relecture
+    const banniere = document.createElement("div");
+    banniere.style.cssText = "background:#fff3cd;border:1px solid #f2a541;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:600;color:#856404;";
+    banniere.innerHTML = `👁️ <strong>Mode relecture</strong> — Vérifiez le compte rendu de la classe ${data.classe}. Si tout est correct, cliquez sur "📄 Générer PDF" pour télécharger.`;
+    document.querySelector(".app").insertBefore(banniere, document.querySelector(".grid"));
+
+    return true;
+  } catch(e) {
+    console.error("Erreur lecture lien relecture", e);
+    return false;
+  }
 }
 
 async function imageToBase64(url) {
@@ -404,7 +497,7 @@ async function imageToBase64(url) {
   });
 }
 
-async function generatePDF() {
+async function generatePDF(apercuSeulement = false) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
 
@@ -655,10 +748,15 @@ async function generatePDF() {
 
   // Sauvegarde
   const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
-  doc.save(`${nomFichier}.pdf`);
 
-  // Effacer la sauvegarde automatique après génération
-  effacerSauvegarde();
+  if (apercuSeulement) {
+    // Retourner un Blob pour l'afficher dans l'iframe
+    return doc.output("blob");
+  } else {
+    // Télécharger le PDF
+    doc.save(`${nomFichier}.pdf`);
+    effacerSauvegarde();
+  }
 }
 
 document.getElementById("listing-eleves").addEventListener("click", () => {
@@ -868,6 +966,9 @@ const _origGeneratePDF = generatePDF;
 // ============================================================
 setupBindings();
 loadConfig().then(() => {
-  // Vérifier s'il y a une sauvegarde après chargement des données
-  setTimeout(verifierSauvegarde, 1500);
+  // Vérifier d'abord si on arrive depuis un lien de relecture
+  if (!verifierLienRelecture()) {
+    // Sinon vérifier s'il y a une sauvegarde
+    setTimeout(verifierSauvegarde, 1500);
+  }
 });
