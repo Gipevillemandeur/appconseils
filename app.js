@@ -92,7 +92,7 @@ function createSubjectRow(values = {}) {
     presentBtn.textContent = isPresent ? "✓" : "✗";
   };
   updateBtn();
-  presentBtn.addEventListener("click", () => { isPresent = !isPresent; updateBtn(); renderSubjects(); });
+  presentBtn.addEventListener("click", () => { isPresent = !isPresent; updateBtn(); renderSubjects(); sauvegarder(); });
   row.appendChild(matiere); row.appendChild(prof); row.appendChild(presentBtn);
   matiere.addEventListener("input", renderSubjects);
   prof.addEventListener("input",    renderSubjects);
@@ -311,6 +311,7 @@ document.getElementById("accueil-btn-commencer").addEventListener("click", async
   setPreview("header-date", formatDate(date));
 
   await loadClasseData(classe);
+  activerSauvegardeAuto();
 });
 
 // ============================================================
@@ -602,6 +603,9 @@ async function generatePDF() {
   // Sauvegarde
   const nomFichier = `Compte-rendu_${classe}_${trimestre}`.replace(/\s+/g, "_");
   doc.save(`${nomFichier}.pdf`);
+
+  // Effacer la sauvegarde automatique après génération
+  effacerSauvegarde();
 }
 
 document.getElementById("listing-eleves").addEventListener("click", () => {
@@ -655,7 +659,162 @@ function switchTab(tab) {
 }
 
 // ============================================================
+//  SAUVEGARDE AUTOMATIQUE (localStorage)
+// ============================================================
+
+const SAVE_KEY = "appconseils_sauvegarde";
+
+function sauvegarder() {
+  const classe = classSelect.value;
+  if (!classe) return; // Rien à sauvegarder si pas de classe
+
+  const data = {
+    classe:       classe,
+    trimestre:    document.getElementById("input-term").value,
+    date:         document.getElementById("input-date").value,
+    principal:    document.getElementById("input-principal").value,
+    parents:      document.getElementById("input-parents").value,
+    students:     document.getElementById("input-students").value,
+    others:       document.getElementById("input-others").value,
+    fel:          document.getElementById("input-fel").value,
+    comp:         document.getElementById("input-comp").value,
+    enc:          document.getElementById("input-enc").value,
+    avc:          document.getElementById("input-avc").value,
+    avt:          document.getElementById("input-avt").value,
+    ava:          document.getElementById("input-ava").value,
+    obsPrincipal: document.getElementById("input-obs-principal").value,
+    obsPP:        document.getElementById("input-obs-pp").value,
+    obsEleves:    document.getElementById("input-obs-eleves").value,
+    obsParents:   document.getElementById("input-obs-parents").value,
+    // Présences des profs
+    presences:    Array.from(document.querySelectorAll("#subjects-form .row:not(.header)")).map(row => ({
+      matiere:  row.querySelectorAll("input")[0]?.value || "",
+      prof:     row.querySelectorAll("input")[1]?.value || "",
+      present:  row._getPresence ? row._getPresence() : "Oui"
+    })),
+    savedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function effacerSauvegarde() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function restaurerSauvegarde(data) {
+  // Remplir les champs cachés
+  classSelect.value = data.classe;
+  document.getElementById("input-term").value    = data.trimestre;
+  document.getElementById("input-date").value    = data.date;
+
+  // Remplir les champs affichage lecture seule
+  document.getElementById("input-class-display").value = data.classe;
+  document.getElementById("input-term-display").value  = data.trimestre;
+  document.getElementById("input-date-display").value  = formatDate(data.date);
+
+  // Forcer l'aperçu header
+  setPreview("preview-title", `Conseil de classe ${data.classe}`);
+  setPreview("preview-term",  data.trimestre);
+  setPreview("header-date",   formatDate(data.date));
+
+  // Restaurer les matières avec les présences
+  applyClassSubjects(data.presences.map(p => ({
+    matiere: p.matiere,
+    prof:    p.prof,
+    present: p.present
+  })));
+
+  // Remplir les autres champs
+  const champs = [
+    ["input-parents",       data.parents],
+    ["input-students",      data.students],
+    ["input-others",        data.others],
+    ["input-fel",           data.fel],
+    ["input-comp",          data.comp],
+    ["input-enc",           data.enc],
+    ["input-avc",           data.avc],
+    ["input-avt",           data.avt],
+    ["input-ava",           data.ava],
+    ["input-obs-principal", data.obsPrincipal],
+    ["input-obs-pp",        data.obsPP],
+    ["input-obs-eleves",    data.obsEleves],
+    ["input-obs-parents",   data.obsParents],
+  ];
+  champs.forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = val || "";
+      el.dispatchEvent(new Event("input")); // Mettre à jour l'aperçu
+    }
+  });
+
+  // Restaurer le principal après un court délai (le select doit être chargé)
+  setTimeout(() => {
+    const principalEl = document.getElementById("input-principal");
+    if (principalEl) {
+      principalEl.value = data.principal || "";
+      principalEl.dispatchEvent(new Event("change"));
+    }
+  }, 500);
+}
+
+function verifierSauvegarde() {
+  const saved = localStorage.getItem(SAVE_KEY);
+  if (!saved) return;
+
+  try {
+    const data = JSON.parse(saved);
+    if (!data.classe) return;
+
+    const date = data.date ? ` du ${formatDate(data.date)}` : "";
+    const msg  = `💾 Une saisie non terminée a été trouvée :
+
+Classe ${data.classe} · ${data.trimestre}${date}
+
+Voulez-vous la reprendre ?`;
+
+    if (confirm(msg)) {
+      // Afficher l'écran app directement
+      document.getElementById("screen-accueil").style.display = "none";
+      document.getElementById("screen-app").style.display     = "block";
+      restaurerSauvegarde(data);
+    } else {
+      effacerSauvegarde();
+    }
+  } catch(e) {
+    console.error("Erreur restauration sauvegarde", e);
+    effacerSauvegarde();
+  }
+}
+
+// Sauvegarde automatique sur chaque champ texte/number/select
+function activerSauvegardeAuto() {
+  const ids = [
+    "input-parents", "input-students", "input-others",
+    "input-fel", "input-comp", "input-enc",
+    "input-avc", "input-avt", "input-ava",
+    "input-obs-principal", "input-obs-pp", "input-obs-eleves", "input-obs-parents",
+    "input-principal", "input-term", "input-date"
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input",  () => sauvegarder());
+      el.addEventListener("change", () => sauvegarder());
+    }
+  });
+}
+
+// Effacer la sauvegarde après génération du PDF
+const _origGeneratePDF = generatePDF;
+// (on appellera effacerSauvegarde() à la fin de generatePDF)
+
+// ============================================================
 //  DÉMARRAGE
 // ============================================================
 setupBindings();
-loadConfig();
+loadConfig().then(() => {
+  // Vérifier s'il y a une sauvegarde après chargement des données
+  setTimeout(verifierSauvegarde, 1500);
+});
