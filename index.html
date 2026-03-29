@@ -267,6 +267,161 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      /* Modale aperçu PDF */
+      #modal-apercu {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 20000;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #modal-apercu.open { display: flex; }
+      .apercu-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      }
+      .apercu-title {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0 0 16px;
+        color: #1b1f24;
+      }
+      .apercu-section {
+        margin-bottom: 12px;
+      }
+      .apercu-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        color: #5d6b7b;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .apercu-value {
+        font-size: 13px;
+        color: #1b1f24;
+        background: #f4f6f8;
+        border-radius: 8px;
+        padding: 8px 10px;
+        white-space: pre-line;
+      }
+      .apercu-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .apercu-table th {
+        background: #f0f4f7;
+        padding: 5px 8px;
+        text-align: left;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: #5d6b7b;
+      }
+      .apercu-table td {
+        padding: 5px 8px;
+        border-top: 1px solid #d6dde5;
+      }
+      .apercu-table .oui { color: #27ae60; font-weight: 700; }
+      .apercu-table .non { color: #e74c3c; font-weight: 700; }
+      .apercu-btns {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .apercu-btns .btn {
+        flex: 1;
+        padding: 12px;
+        font-size: 14px;
+        text-align: center;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        border: none;
+      }
+      .btn-annuler { background: #f4f6f8; color: #5d6b7b; }
+      .btn-confirmer { background: #1f6f8b; color: #fff; }
+    </style>
+    <!-- Modale aperçu PDF -->
+    <div id="modal-apercu">
+      <div class="apercu-card">
+        <div class="apercu-title">📄 Aperçu avant génération du PDF</div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Classe · Trimestre · Date</div>
+          <div class="apercu-value" id="ap-entete">—</div>
+        </div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Président(e) de séance</div>
+          <div class="apercu-value" id="ap-principal">—</div>
+        </div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Équipe pédagogique</div>
+          <table class="apercu-table">
+            <thead><tr><th>Matière</th><th>Professeur(s)</th><th>Présent</th></tr></thead>
+            <tbody id="ap-profs"></tbody>
+          </table>
+        </div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Participants</div>
+          <table class="apercu-table">
+            <thead><tr><th>Parents délégués</th><th>Élèves délégués</th><th>Autres</th></tr></thead>
+            <tbody><tr>
+              <td id="ap-parents" style="white-space:pre-line">—</td>
+              <td id="ap-students" style="white-space:pre-line">—</td>
+              <td id="ap-others" style="white-space:pre-line">—</td>
+            </tr></tbody>
+          </table>
+        </div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Synthèse</div>
+          <table class="apercu-table">
+            <thead><tr><th>Fél.</th><th>Comp.</th><th>Enc.</th><th>Av.C</th><th>Av.T</th><th>Av.A</th></tr></thead>
+            <tbody><tr>
+              <td id="ap-fel">—</td><td id="ap-comp">—</td><td id="ap-enc">—</td>
+              <td id="ap-avc">—</td><td id="ap-avt">—</td><td id="ap-ava">—</td>
+            </tr></tbody>
+          </table>
+        </div>
+
+        <div class="apercu-section">
+          <div class="apercu-label">Observations — Direction</div>
+          <div class="apercu-value" id="ap-obs-dir">—</div>
+        </div>
+        <div class="apercu-section">
+          <div class="apercu-label">Observations — Prof Principal</div>
+          <div class="apercu-value" id="ap-obs-pp">—</div>
+        </div>
+        <div class="apercu-section">
+          <div class="apercu-label">Observations — Élèves</div>
+          <div class="apercu-value" id="ap-obs-el">—</div>
+        </div>
+        <div class="apercu-section">
+          <div class="apercu-label">Observations — Parents</div>
+          <div class="apercu-value" id="ap-obs-pa">—</div>
+        </div>
+
+        <div class="apercu-btns">
+          <button class="btn btn-annuler" onclick="fermerApercu()">✏️ Corriger</button>
+          <button class="btn btn-confirmer" onclick="confirmerPDF()">📄 Générer le PDF</button>
+        </div>
+      </div>
+    </div>
+
     <script src="app.js"></script>
   </body>
 </html>

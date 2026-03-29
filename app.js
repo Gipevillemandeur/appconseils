@@ -339,7 +339,60 @@ classSelect.addEventListener("change", async (e) => {
 // ============================================================
 //  GÉNÉRATION PDF
 // ============================================================
-document.getElementById("print").addEventListener("click", () => generatePDF());
+document.getElementById("print").addEventListener("click", () => ouvrirApercu());
+
+function ouvrirApercu() {
+  const classe    = classSelect.value || "—";
+  const trimestre = document.getElementById("input-term").value || "—";
+  const date      = formatDate(document.getElementById("input-date").value);
+  const principal = document.getElementById("input-principal").value || "—";
+
+  // Entête
+  document.getElementById("ap-entete").textContent = `${classe} · ${trimestre} · ${date}`;
+  document.getElementById("ap-principal").textContent = principal;
+
+  // Profs
+  const tbody = document.getElementById("ap-profs");
+  tbody.innerHTML = "";
+  document.querySelectorAll("#subjects-form .row:not(.header)").forEach(row => {
+    const inputs   = row.querySelectorAll("input");
+    const presence = row._getPresence ? row._getPresence() : "Oui";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${inputs[0]?.value || "—"}</td>
+      <td>${inputs[1]?.value || "—"}</td>
+      <td class="${presence === "Oui" ? "oui" : "non"}">${presence}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Participants
+  document.getElementById("ap-parents").textContent  = document.getElementById("input-parents").value  || "—";
+  document.getElementById("ap-students").textContent = document.getElementById("input-students").value || "—";
+  document.getElementById("ap-others").textContent   = document.getElementById("input-others").value   || "—";
+
+  // Synthèse
+  ["fel","comp","enc","avc","avt","ava"].forEach(k => {
+    document.getElementById("ap-" + k).textContent = document.getElementById("input-" + k).value || "—";
+  });
+
+  // Observations
+  document.getElementById("ap-obs-dir").textContent = document.getElementById("input-obs-principal").value || "—";
+  document.getElementById("ap-obs-pp").textContent  = document.getElementById("input-obs-pp").value       || "—";
+  document.getElementById("ap-obs-el").textContent  = document.getElementById("input-obs-eleves").value   || "—";
+  document.getElementById("ap-obs-pa").textContent  = document.getElementById("input-obs-parents").value  || "—";
+
+  document.getElementById("modal-apercu").classList.add("open");
+}
+
+function fermerApercu() {
+  document.getElementById("modal-apercu").classList.remove("open");
+}
+
+function confirmerPDF() {
+  fermerApercu();
+  generatePDF();
+}
 
 async function imageToBase64(url) {
   const resp = await fetch(url);
