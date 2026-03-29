@@ -474,11 +474,31 @@ function verifierLienRelecture() {
       if (principalEl) { principalEl.value = data.principal || ""; principalEl.dispatchEvent(new Event("change")); }
     }, 500);
 
-    // Afficher bannière relecture
-    const banniere = document.createElement("div");
-    banniere.style.cssText = "background:#fff3cd;border:1px solid #f2a541;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:600;color:#856404;";
-    banniere.innerHTML = `👁️ <strong>Mode relecture</strong> — Vérifiez le compte rendu de la classe ${data.classe}. Si tout est correct, cliquez sur "📄 Générer PDF" pour télécharger.`;
-    document.querySelector(".app").insertBefore(banniere, document.querySelector(".grid"));
+    // Ouvrir directement la modale d'aperçu en mode relecture
+    setTimeout(async () => {
+      // Modifier la modale pour le mode relecture
+      const modal = document.getElementById("modal-apercu");
+      
+      // Cacher les boutons normaux et le lien de relecture
+      document.querySelector(".apercu-btns").style.display = "none";
+      document.getElementById("relecture-section").style.display = "none";
+
+      // Ajouter le message de confirmation
+      const msgConfirm = document.createElement("div");
+      msgConfirm.style.cssText = "background:#d4edda;border:1px solid #27ae60;border-radius:10px;padding:14px 16px;font-size:13px;font-weight:600;color:#155724;text-align:center;margin-top:12px;";
+      msgConfirm.innerHTML = `✅ <strong>Si ce compte rendu vous convient</strong>, confirmez-le au parent rédacteur qui pourra générer le PDF final.`;
+      document.querySelector(".apercu-card").appendChild(msgConfirm);
+
+      // Ajouter bouton fermer
+      const btnFermer = document.createElement("button");
+      btnFermer.textContent = "✖ Fermer";
+      btnFermer.style.cssText = "margin-top:10px;width:100%;padding:12px;background:#f4f6f8;color:#5d6b7b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;";
+      btnFermer.onclick = () => modal.classList.remove("open");
+      document.querySelector(".apercu-card").appendChild(btnFermer);
+
+      // Ouvrir la modale avec le PDF
+      await ouvrirApercu();
+    }, 800);
 
     return true;
   } catch(e) {
