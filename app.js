@@ -385,39 +385,45 @@ function confirmerPDF() {
 // ============================================================
 //  LIEN DE RELECTURE
 // ============================================================
-function genererLienRelecture() {
-  try {
-    const data = {
-      classe:       classSelect.value,
-      trimestre:    document.getElementById("input-term").value,
-      date:         document.getElementById("input-date").value,
-      principal:    document.getElementById("input-principal").value,
-      parents:      document.getElementById("input-parents").value,
-      students:     document.getElementById("input-students").value,
-      others:       document.getElementById("input-others").value,
-      fel:          document.getElementById("input-fel").value,
-      comp:         document.getElementById("input-comp").value,
-      enc:          document.getElementById("input-enc").value,
-      avc:          document.getElementById("input-avc").value,
-      avt:          document.getElementById("input-avt").value,
-      ava:          document.getElementById("input-ava").value,
-      obsPrincipal: document.getElementById("input-obs-principal").value,
-      obsPP:        document.getElementById("input-obs-pp").value,
-      obsEleves:    document.getElementById("input-obs-eleves").value,
-      obsParents:   document.getElementById("input-obs-parents").value,
-      presences:    Array.from(document.querySelectorAll("#subjects-form .row:not(.header)")).map(row => ({
-        matiere: row.querySelectorAll("input")[0]?.value || "",
-        prof:    row.querySelectorAll("input")[1]?.value || "",
-        present: row._getPresence ? row._getPresence() : "Oui"
-      }))
-    };
+function collecterDonnees() {
+  return {
+    classe:       classSelect.value,
+    trimestre:    document.getElementById("input-term").value,
+    date:         document.getElementById("input-date").value,
+    principal:    document.getElementById("input-principal").value,
+    parents:      document.getElementById("input-parents").value,
+    students:     document.getElementById("input-students").value,
+    others:       document.getElementById("input-others").value,
+    fel:          document.getElementById("input-fel").value,
+    comp:         document.getElementById("input-comp").value,
+    enc:          document.getElementById("input-enc").value,
+    avc:          document.getElementById("input-avc").value,
+    avt:          document.getElementById("input-avt").value,
+    ava:          document.getElementById("input-ava").value,
+    obsPrincipal: document.getElementById("input-obs-principal").value,
+    obsPP:        document.getElementById("input-obs-pp").value,
+    obsEleves:    document.getElementById("input-obs-eleves").value,
+    obsParents:   document.getElementById("input-obs-parents").value,
+    presences:    Array.from(document.querySelectorAll("#subjects-form .row:not(.header)")).map(row => ({
+      matiere: row.querySelectorAll("input")[0]?.value || "",
+      prof:    row.querySelectorAll("input")[1]?.value || "",
+      present: row._getPresence ? row._getPresence() : "Oui"
+    }))
+  };
+}
 
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-    return `${window.location.origin}${window.location.pathname}?relecture=${encoded}`;
+function genererLien(type) {
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(collecterDonnees()))));
+    return `${window.location.origin}${window.location.pathname}?${type}=${encoded}`;
   } catch(e) {
-    console.error("Erreur génération lien relecture", e);
+    console.error("Erreur génération lien", e);
     return null;
   }
+}
+
+function genererLienRelecture() {
+  return genererLien("relecture");
 }
 
 function copierLienRelecture() {
@@ -430,81 +436,193 @@ function copierLienRelecture() {
 }
 
 // Vérifier si on arrive depuis un lien de relecture
+// Remplir le formulaire depuis un objet data
+function remplirFormulaire(data) {
+  classSelect.value = data.classe;
+  document.getElementById("input-term").value = data.trimestre;
+  document.getElementById("input-date").value = data.date;
+  document.getElementById("input-class-display").value = data.classe;
+  document.getElementById("input-term-display").value  = data.trimestre;
+  document.getElementById("input-date-display").value  = formatDate(data.date);
+  setPreview("preview-title", `Conseil de classe ${data.classe}`);
+  setPreview("preview-term",  data.trimestre);
+  setPreview("header-date",   formatDate(data.date));
+  applyClassSubjects(data.presences || []);
+  const champs = [
+    ["input-parents", data.parents], ["input-students", data.students],
+    ["input-others", data.others], ["input-fel", data.fel],
+    ["input-comp", data.comp], ["input-enc", data.enc],
+    ["input-avc", data.avc], ["input-avt", data.avt], ["input-ava", data.ava],
+    ["input-obs-principal", data.obsPrincipal], ["input-obs-pp", data.obsPP],
+    ["input-obs-eleves", data.obsEleves], ["input-obs-parents", data.obsParents],
+  ];
+  champs.forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = val || ""; el.dispatchEvent(new Event("input")); }
+  });
+  setTimeout(() => {
+    const principalEl = document.getElementById("input-principal");
+    if (principalEl) { principalEl.value = data.principal || ""; principalEl.dispatchEvent(new Event("change")); }
+  }, 500);
+}
+
+// Afficher les différences en rouge entre version originale et version retour
+function afficherDifferences(original, retour) {
+  const champsAComparer = [
+    ["input-parents", "parents"], ["input-students", "students"],
+    ["input-others", "others"], ["input-obs-principal", "obsPrincipal"],
+    ["input-obs-pp", "obsPP"], ["input-obs-eleves", "obsEleves"],
+    ["input-obs-parents", "obsParents"], ["input-fel", "fel"],
+    ["input-comp", "comp"], ["input-enc", "enc"],
+    ["input-avc", "avc"], ["input-avt", "avt"], ["input-ava", "ava"],
+    ["input-principal", "principal"],
+  ];
+
+  let nbDiffs = 0;
+  champsAComparer.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const valOrig   = (original[key] || "").trim();
+    const valRetour = (retour[key]   || "").trim();
+    if (valOrig !== valRetour) {
+      el.style.border     = "2px solid #e74c3c";
+      el.style.background = "#fff5f5";
+      el.style.color      = "#c0392b";
+      nbDiffs++;
+    }
+  });
+
+  // Comparer les présences
+  (retour.presences || []).forEach((p, i) => {
+    const rows = document.querySelectorAll("#subjects-form .row:not(.header)");
+    const orig = (original.presences || [])[i];
+    if (!orig || !rows[i]) return;
+    if (orig.present !== p.present) {
+      const btn = rows[i].querySelector(".presence-btn");
+      if (btn) { btn.style.outline = "3px solid #e74c3c"; btn.style.outlineOffset = "2px"; }
+      nbDiffs++;
+    }
+  });
+
+  return nbDiffs;
+}
+
 function verifierLienRelecture() {
-  const params = new URLSearchParams(window.location.search);
-  const encoded = params.get("relecture");
-  if (!encoded) return false;
+  const params  = new URLSearchParams(window.location.search);
+  const encodedRelecture = params.get("relecture");
+  const encodedRetour    = params.get("retour");
 
-  try {
-    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
-    if (!data.classe) return false;
+  // ---- MODE RELECTURE (Parent B) ----
+  if (encodedRelecture) {
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(encodedRelecture))));
+      if (!data.classe) return false;
 
-    // Afficher directement en mode lecture seule
-    document.getElementById("screen-accueil").style.display = "none";
-    document.getElementById("screen-app").style.display     = "block";
+      document.getElementById("screen-accueil").style.display = "none";
+      document.getElementById("screen-app").style.display     = "block";
+      remplirFormulaire(data);
 
-    // Remplir les champs
-    classSelect.value = data.classe;
-    document.getElementById("input-term").value = data.trimestre;
-    document.getElementById("input-date").value = data.date;
-    document.getElementById("input-class-display").value = data.classe;
-    document.getElementById("input-term-display").value  = data.trimestre;
-    document.getElementById("input-date-display").value  = formatDate(data.date);
-    setPreview("preview-title", `Conseil de classe ${data.classe}`);
-    setPreview("preview-term",  data.trimestre);
-    setPreview("header-date",   formatDate(data.date));
+      setTimeout(async () => {
+        const modal = document.getElementById("modal-apercu");
+        document.querySelector(".apercu-btns").style.display  = "none";
+        document.getElementById("relecture-section").style.display = "none";
 
-    applyClassSubjects(data.presences || []);
+        // Bouton "Envoyer mes modifications" → génère lien ?retour= et efface storage
+        const btnRetour = document.createElement("div");
+        btnRetour.style.cssText = "margin-top:12px;";
+        btnRetour.innerHTML = `
+          <div style="font-size:12px;color:#5d6b7b;font-weight:600;margin-bottom:6px;">✏️ Vous avez des modifications ? Renvoyez le lien au parent rédacteur :</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="retour-url" type="text" readonly style="flex:1;border:1px solid #d6dde5;border-radius:8px;padding:8px 10px;font-size:12px;background:#f4f6f8;"/>
+            <button onclick="copierLienRetour()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copier</button>
+          </div>
+          <div id="copie-retour-confirm" style="display:none;color:#27ae60;font-size:12px;margin-top:4px;font-weight:600;">✅ Lien copié !</div>
+        `;
+        document.querySelector(".apercu-card").appendChild(btnRetour);
 
-    const champs = [
-      ["input-parents", data.parents], ["input-students", data.students],
-      ["input-others", data.others], ["input-fel", data.fel],
-      ["input-comp", data.comp], ["input-enc", data.enc],
-      ["input-avc", data.avc], ["input-avt", data.avt], ["input-ava", data.ava],
-      ["input-obs-principal", data.obsPrincipal], ["input-obs-pp", data.obsPP],
-      ["input-obs-eleves", data.obsEleves], ["input-obs-parents", data.obsParents],
-    ];
-    champs.forEach(([id, val]) => {
-      const el = document.getElementById(id);
-      if (el) { el.value = val || ""; el.dispatchEvent(new Event("input")); }
-    });
+        // Message si tout est ok
+        const msgOk = document.createElement("div");
+        msgOk.style.cssText = "background:#d4edda;border:1px solid #27ae60;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;color:#155724;text-align:center;margin-top:8px;";
+        msgOk.innerHTML = `✅ <strong>Tout est correct ?</strong> Confirmez-le au parent rédacteur qui pourra générer le PDF.`;
+        document.querySelector(".apercu-card").appendChild(msgOk);
 
-    setTimeout(() => {
-      const principalEl = document.getElementById("input-principal");
-      if (principalEl) { principalEl.value = data.principal || ""; principalEl.dispatchEvent(new Event("change")); }
-    }, 500);
+        const btnFermer = document.createElement("button");
+        btnFermer.textContent = "✖ Fermer";
+        btnFermer.style.cssText = "margin-top:10px;width:100%;padding:12px;background:#f4f6f8;color:#5d6b7b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;";
+        btnFermer.onclick = () => modal.classList.remove("open");
+        document.querySelector(".apercu-card").appendChild(btnFermer);
 
-    // Ouvrir directement la modale d'aperçu en mode relecture
-    setTimeout(async () => {
-      // Modifier la modale pour le mode relecture
-      const modal = document.getElementById("modal-apercu");
-      
-      // Cacher les boutons normaux et le lien de relecture
-      document.querySelector(".apercu-btns").style.display = "none";
-      document.getElementById("relecture-section").style.display = "none";
+        // Pré-générer le lien retour
+        const lienRetour = genererLien("retour");
+        if (lienRetour) document.getElementById("retour-url").value = lienRetour;
 
-      // Ajouter le message de confirmation
-      const msgConfirm = document.createElement("div");
-      msgConfirm.style.cssText = "background:#d4edda;border:1px solid #27ae60;border-radius:10px;padding:14px 16px;font-size:13px;font-weight:600;color:#155724;text-align:center;margin-top:12px;";
-      msgConfirm.innerHTML = `✅ <strong>Si ce compte rendu vous convient</strong>, confirmez-le au parent rédacteur qui pourra générer le PDF final.`;
-      document.querySelector(".apercu-card").appendChild(msgConfirm);
+        await ouvrirApercu();
+      }, 800);
 
-      // Ajouter bouton fermer
-      const btnFermer = document.createElement("button");
-      btnFermer.textContent = "✖ Fermer";
-      btnFermer.style.cssText = "margin-top:10px;width:100%;padding:12px;background:#f4f6f8;color:#5d6b7b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;";
-      btnFermer.onclick = () => modal.classList.remove("open");
-      document.querySelector(".apercu-card").appendChild(btnFermer);
-
-      // Ouvrir la modale avec le PDF
-      await ouvrirApercu();
-    }, 800);
-
-    return true;
-  } catch(e) {
-    console.error("Erreur lecture lien relecture", e);
-    return false;
+      return true;
+    } catch(e) {
+      console.error("Erreur relecture", e);
+      return false;
+    }
   }
+
+  // ---- MODE RETOUR (Parent A reçoit les modifications) ----
+  if (encodedRetour) {
+    try {
+      const dataRetour = JSON.parse(decodeURIComponent(escape(atob(encodedRetour))));
+      if (!dataRetour.classe) return false;
+
+      document.getElementById("screen-accueil").style.display = "none";
+      document.getElementById("screen-app").style.display     = "block";
+
+      // Récupérer la sauvegarde originale de Parent A
+      const savedRaw  = localStorage.getItem(SAVE_KEY);
+      const original  = savedRaw ? JSON.parse(savedRaw) : null;
+
+      // Remplir avec la version retour
+      remplirFormulaire(dataRetour);
+      activerSauvegardeAuto();
+
+      // Afficher les différences après rendu
+      setTimeout(() => {
+        const nbDiffs = original ? afficherDifferences(original, dataRetour) : 0;
+
+        // Bannière
+        const banniere = document.createElement("div");
+        banniere.style.cssText = "border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;";
+        if (nbDiffs > 0) {
+          banniere.style.background = "#fdecea";
+          banniere.style.border     = "1px solid #e74c3c";
+          banniere.style.color      = "#c0392b";
+          banniere.innerHTML = `<span style="font-size:20px">✏️</span><span><strong>${nbDiffs} modification(s)</strong> apportée(s) par le 2ème parent sont surlignées en rouge. Vérifiez et générez le PDF quand vous êtes prêt.</span>`;
+        } else {
+          banniere.style.background = "#d4edda";
+          banniere.style.border     = "1px solid #27ae60";
+          banniere.style.color      = "#155724";
+          banniere.innerHTML = `<span style="font-size:20px">✅</span><span><strong>Aucune modification</strong> — Le 2ème parent a validé le compte rendu tel quel. Vous pouvez générer le PDF.`;
+        }
+        document.querySelector(".app").insertBefore(banniere, document.querySelector(".grid"));
+      }, 900);
+
+      return true;
+    } catch(e) {
+      console.error("Erreur retour", e);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+function copierLienRetour() {
+  const input = document.getElementById("retour-url");
+  if (!input) return;
+  navigator.clipboard.writeText(input.value).then(() => {
+    // Effacer le storage de Parent B
+    effacerSauvegarde();
+    const confirm = document.getElementById("copie-retour-confirm");
+    if (confirm) { confirm.style.display = "block"; setTimeout(() => { confirm.style.display = "none"; }, 2500); }
+  });
 }
 
 async function imageToBase64(url) {
