@@ -80,20 +80,37 @@ function setupBindings() {
 function createSubjectRow(values = {}) {
   const row     = document.createElement("div");
   row.className = "row";
+
   const matiere = document.createElement("input");
   matiere.value = values.matiere || "";
-  const prof    = document.createElement("input");
-  prof.value    = values.prof || "";
+  const wrapMatiere = document.createElement("div");
+  wrapMatiere.className = "cell-matiere";
+  wrapMatiere.appendChild(matiere);
+
+  const prof = document.createElement("input");
+  prof.value = values.prof || "";
+  const wrapProf = document.createElement("div");
+  wrapProf.className = "cell-prof";
+  wrapProf.appendChild(prof);
+
   const presentBtn = document.createElement("button");
   presentBtn.type  = "button";
-  let isPresent    = values.present === "Oui" || values.present === "";
-  const updateBtn  = () => {
+  const wrapPresence = document.createElement("div");
+  wrapPresence.className = "cell-presence";
+  wrapPresence.appendChild(presentBtn);
+
+  let isPresent = values.present === "Oui" || values.present === "";
+  const updateBtn = () => {
     presentBtn.className   = isPresent ? "presence-btn present" : "presence-btn absent";
     presentBtn.textContent = isPresent ? "✓" : "✗";
   };
   updateBtn();
   presentBtn.addEventListener("click", () => { isPresent = !isPresent; updateBtn(); renderSubjects(); sauvegarder(); });
-  row.appendChild(matiere); row.appendChild(prof); row.appendChild(presentBtn);
+
+  row.appendChild(wrapMatiere);
+  row.appendChild(wrapProf);
+  row.appendChild(wrapPresence);
+
   matiere.addEventListener("input", renderSubjects);
   prof.addEventListener("input",    renderSubjects);
   row._getPresence = () => (isPresent ? "Oui" : "Non");
@@ -103,7 +120,7 @@ function createSubjectRow(values = {}) {
 function renderSubjects() {
   subjectPreview.innerHTML = "";
   subjectForm.querySelectorAll(".row:not(.header)").forEach((row) => {
-    const inputs     = row.querySelectorAll("input");
+    const inputs = row.querySelectorAll("input");
     const previewRow = document.createElement("div");
     previewRow.className = "row";
     [inputs[0].value || "—", inputs[1].value || "—", row._getPresence()].forEach((text) => {
@@ -666,33 +683,33 @@ function afficherDifferences(original, retour) {
 
     if (!hasDiffMatiere && !hasDiffProf && !hasDiffPresence) return;
 
-    // Diff matière — afficher dans la cellule matière
+    // Diff matière — dans le wrapper matière
     if (hasDiffMatiere && inputs[0]) {
       const d = document.createElement("div");
       d.className = "diff-display no-print";
       d.innerHTML = diffMots(orig.matiere, p.matiere);
       d.style.cssText = "font-size:11px;margin-top:3px;padding:2px 4px;border-radius:4px;background:#fffdf0;border:1px solid #f2a541;";
-      inputs[0].after(d);
+      rows[i].querySelector(".cell-matiere").appendChild(d);
       nbDiffs++;
     }
 
-    // Diff prof — afficher dans la cellule prof
+    // Diff prof — dans le wrapper prof
     if (hasDiffProf && inputs[1]) {
       const d = document.createElement("div");
       d.className = "diff-display no-print";
       d.innerHTML = diffMots(orig.prof, p.prof);
       d.style.cssText = "font-size:11px;margin-top:3px;padding:2px 4px;border-radius:4px;background:#fffdf0;border:1px solid #f2a541;";
-      inputs[1].after(d);
+      rows[i].querySelector(".cell-prof").appendChild(d);
       nbDiffs++;
     }
 
-    // Diff présence — afficher directement sous le bouton ✓/✗
+    // Diff présence — dans le wrapper présence
     if (hasDiffPresence && btn) {
       const d = document.createElement("div");
       d.className = "diff-display no-print";
       d.innerHTML = `<span class="diff-del">${orig.present}</span><br><span class="diff-add">${p.present}</span>`;
       d.style.cssText = "font-size:10px;text-align:center;margin-top:2px;line-height:1.4;";
-      btn.after(d);
+      rows[i].querySelector(".cell-presence").appendChild(d);
       nbDiffs++;
     }
   });

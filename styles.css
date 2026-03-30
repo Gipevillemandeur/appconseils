@@ -702,3 +702,17 @@ body {
   .diff-display { display: none !important; }
   .no-print { display: none !important; }
 }
+
+/* Wrappers cellules tableau matières */
+.cell-matiere, .cell-prof, .cell-presence {
+  display: flex;
+  flex-direction: column;
+}
+
+.cell-matiere input, .cell-prof input {
+  width: 100%;
+}
+
+.cell-presence {
+  align-items: center;
+}
