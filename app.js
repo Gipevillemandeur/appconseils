@@ -612,8 +612,8 @@ function afficherDifferences(original, retour) {
     const diffHtml = diffTexte(valOrig, valRetour);
     const diffDiv  = document.createElement("div");
     diffDiv.className = "diff-display no-print";
-    diffDiv.innerHTML = `<span style="font-size:11px;color:#5d6b7b;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">🔍 Modifications :</span>` + diffHtml.replace(/
-/g, "<br>");
+    const label = '<span style="font-size:11px;color:#5d6b7b;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">🔍 Modifications :</span>';
+    diffDiv.innerHTML = label + diffHtml.split("\n").join("<br>");
     diffDiv.style.cssText = "border:1px solid #f2a541;border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fffdf0;white-space:pre-wrap;margin-top:4px;";
     el.parentNode.insertBefore(diffDiv, el.nextSibling);
   });
