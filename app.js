@@ -657,39 +657,42 @@ function afficherDifferences(original, retour) {
     const orig = (original.presences || [])[i];
     if (!orig || !rows[i]) return;
     const inputs = rows[i].querySelectorAll("input");
+    const btn    = rows[i].querySelector(".presence-btn");
 
-    // Diff matière
-    if (orig.matiere !== p.matiere && inputs[0]) {
-      const diffDiv = document.createElement("div");
-      diffDiv.className = "diff-display no-print";
-      diffDiv.innerHTML = diffMots(orig.matiere, p.matiere);
-      diffDiv.style.cssText = "font-size:12px;margin-top:2px;background:#fffdf0;padding:2px 4px;border-radius:4px;";
-      inputs[0].style.opacity = "0.4";
-      inputs[0].parentNode.insertBefore(diffDiv, inputs[0].nextSibling);
+    // On va créer un wrapper sous chaque ligne pour afficher les diffs proprement
+    const hasDiffMatiere  = orig.matiere !== p.matiere;
+    const hasDiffProf     = orig.prof    !== p.prof;
+    const hasDiffPresence = orig.present !== p.present;
+
+    if (!hasDiffMatiere && !hasDiffProf && !hasDiffPresence) return;
+
+    // Diff matière — afficher dans la cellule matière
+    if (hasDiffMatiere && inputs[0]) {
+      const d = document.createElement("div");
+      d.className = "diff-display no-print";
+      d.innerHTML = diffMots(orig.matiere, p.matiere);
+      d.style.cssText = "font-size:11px;margin-top:3px;padding:2px 4px;border-radius:4px;background:#fffdf0;border:1px solid #f2a541;";
+      inputs[0].after(d);
       nbDiffs++;
     }
 
-    // Diff prof
-    if (orig.prof !== p.prof && inputs[1]) {
-      const diffDiv = document.createElement("div");
-      diffDiv.className = "diff-display no-print";
-      diffDiv.innerHTML = diffMots(orig.prof, p.prof);
-      diffDiv.style.cssText = "font-size:12px;margin-top:2px;background:#fffdf0;padding:2px 4px;border-radius:4px;";
-      inputs[1].style.opacity = "0.4";
-      inputs[1].parentNode.insertBefore(diffDiv, inputs[1].nextSibling);
+    // Diff prof — afficher dans la cellule prof
+    if (hasDiffProf && inputs[1]) {
+      const d = document.createElement("div");
+      d.className = "diff-display no-print";
+      d.innerHTML = diffMots(orig.prof, p.prof);
+      d.style.cssText = "font-size:11px;margin-top:3px;padding:2px 4px;border-radius:4px;background:#fffdf0;border:1px solid #f2a541;";
+      inputs[1].after(d);
       nbDiffs++;
     }
 
-    // Diff présence
-    if (orig.present !== p.present) {
-      const btn = rows[i].querySelector(".presence-btn");
-      if (btn) {
-        const diffSpan = document.createElement("span");
-        diffSpan.className = "diff-display no-print";
-        diffSpan.innerHTML = `<span class="diff-del">${orig.present}</span>→<span class="diff-add">${p.present}</span>`;
-        diffSpan.style.cssText = "font-size:11px;display:block;text-align:center;margin-top:2px;";
-        btn.parentNode.appendChild(diffSpan);
-      }
+    // Diff présence — afficher directement sous le bouton ✓/✗
+    if (hasDiffPresence && btn) {
+      const d = document.createElement("div");
+      d.className = "diff-display no-print";
+      d.innerHTML = `<span class="diff-del">${orig.present}</span><br><span class="diff-add">${p.present}</span>`;
+      d.style.cssText = "font-size:10px;text-align:center;margin-top:2px;line-height:1.4;";
+      btn.after(d);
       nbDiffs++;
     }
   });
