@@ -703,12 +703,14 @@ function afficherDifferences(original, retour) {
       nbDiffs++;
     }
 
-    // Diff présence — dans le wrapper présence
+    // Diff présence — ~~✓~~ ✗ ou ~~✗~~ ✓ sous le bouton
     if (hasDiffPresence && btn) {
+      const origSymbol = orig.present === "Oui" ? "✓" : "✗";
+      const newSymbol  = p.present   === "Oui" ? "✓" : "✗";
       const d = document.createElement("div");
       d.className = "diff-display no-print";
-      d.innerHTML = `<span class="diff-del">${orig.present}</span><br><span class="diff-add">${p.present}</span>`;
-      d.style.cssText = "font-size:10px;text-align:center;margin-top:2px;line-height:1.4;";
+      d.innerHTML = `<span class="diff-del">${origSymbol}</span> <span class="diff-add">${newSymbol}</span>`;
+      d.style.cssText = "font-size:14px;font-weight:700;text-align:center;margin-top:3px;line-height:1;";
       rows[i].querySelector(".cell-presence").appendChild(d);
       nbDiffs++;
     }
