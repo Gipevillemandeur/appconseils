@@ -501,8 +501,9 @@ function remplirFormulaire(data) {
 function diffMots(origStr, newStr) {
   if (origStr === newStr) return origStr;
 
-  const origMots = (origStr || "").split(/(\s+)/);
-  const newMots  = (newStr  || "").split(/(\s+)/);
+  // Séparer en mots (sans les espaces dans le tableau)
+  const origMots = (origStr || "").split(" ").filter(w => w !== "");
+  const newMots  = (newStr  || "").split(" ").filter(w => w !== "");
 
   // Algorithme LCS (Longest Common Subsequence) sur les mots
   const m = origMots.length;
@@ -537,10 +538,11 @@ function diffMots(origStr, newStr) {
     }
   }
 
-  parts.forEach(p => {
-    if (p.type === "same") html += p.val;
-    else if (p.type === "add") html += `<span class="diff-add">${p.val}</span>`;
-    else html += `<span class="diff-del">${p.val}</span>`;
+  parts.forEach((p, idx) => {
+    const space = idx < parts.length - 1 ? " " : "";
+    if (p.type === "same") html += p.val + space;
+    else if (p.type === "add") html += `<span class="diff-add">${p.val}</span>${space}`;
+    else html += `<span class="diff-del">${p.val}</span>${space}`;
   });
 
   return html;
@@ -597,7 +599,7 @@ function afficherDifferences(original, retour) {
 
   let nbDiffs = 0;
 
-  // Traitement des textareas — afficher le diff inline
+  // Traitement des textareas — afficher le diff EN DESSOUS (textarea reste éditable)
   champsTexte.forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -607,13 +609,12 @@ function afficherDifferences(original, retour) {
 
     nbDiffs++;
 
-    // Remplacer le textarea par un div avec le diff
     const diffHtml = diffTexte(valOrig, valRetour);
     const diffDiv  = document.createElement("div");
     diffDiv.className = "diff-display no-print";
-    diffDiv.innerHTML = diffHtml.replace(/\n/g, "<br>");
-    diffDiv.style.cssText = "border:1px solid #d6dde5;border-radius:10px;padding:8px 10px;font-size:14px;font-family:inherit;background:#fffdf0;white-space:pre-wrap;min-height:40px;";
-    el.style.display = "none";
+    diffDiv.innerHTML = `<span style="font-size:11px;color:#5d6b7b;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">🔍 Modifications :</span>` + diffHtml.replace(/
+/g, "<br>");
+    diffDiv.style.cssText = "border:1px solid #f2a541;border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fffdf0;white-space:pre-wrap;margin-top:4px;";
     el.parentNode.insertBefore(diffDiv, el.nextSibling);
   });
 
