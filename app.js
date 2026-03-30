@@ -436,12 +436,12 @@ function genererLienRelecture() {
   return genererLien("relecture");
 }
 
-// Génère un lien retour qui embarque AUSSI la version originale pour comparaison
+// Génère un lien retour qui embarque les données modifiées + la version originale
 function genererLienRetourAvecOriginal() {
   try {
     const dataModif    = collecterDonnees();
-    const savedRaw     = localStorage.getItem(SAVE_KEY_ORIGINAL) || localStorage.getItem(SAVE_KEY);
-    const dataOriginal = savedRaw ? JSON.parse(savedRaw) : null;
+    // Utiliser la version originale stockée lors de l'ouverture du lien relecture
+    const dataOriginal = window._donneesOriginalesParentA || null;
 
     const payload = { modif: dataModif, original: dataOriginal };
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
@@ -547,6 +547,10 @@ function verifierLienRelecture() {
     try {
       const data = JSON.parse(decodeURIComponent(escape(atob(encodedRelecture))));
       if (!data.classe) return false;
+
+      // Stocker la version originale dans une variable globale
+      // pour l'embarquer dans le lien retour
+      window._donneesOriginalesParentA = data;
 
       document.getElementById("screen-accueil").style.display = "none";
       document.getElementById("screen-app").style.display     = "block";
