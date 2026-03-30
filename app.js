@@ -522,42 +522,47 @@ function verifierLienRelecture() {
       document.getElementById("screen-app").style.display     = "block";
       remplirFormulaire(data);
 
-      setTimeout(async () => {
-        const modal = document.getElementById("modal-apercu");
-        document.querySelector(".apercu-btns").style.display  = "none";
-        document.getElementById("relecture-section").style.display = "none";
+      // Activer la sauvegarde auto pour Parent B (pour capturer ses modifs)
+      activerSauvegardeAuto();
 
-        // Bouton "Envoyer mes modifications" → génère lien ?retour= et efface storage
-        const btnRetour = document.createElement("div");
-        btnRetour.style.cssText = "margin-top:12px;";
-        btnRetour.innerHTML = `
-          <div style="font-size:12px;color:#5d6b7b;font-weight:600;margin-bottom:6px;">✏️ Vous avez des modifications ? Renvoyez le lien au parent rédacteur :</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input id="retour-url" type="text" readonly style="flex:1;border:1px solid #d6dde5;border-radius:8px;padding:8px 10px;font-size:12px;background:#f4f6f8;"/>
-            <button onclick="copierLienRetour()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copier</button>
-          </div>
-          <div id="copie-retour-confirm" style="display:none;color:#27ae60;font-size:12px;margin-top:4px;font-weight:600;">✅ Lien copié !</div>
-        `;
-        document.querySelector(".apercu-card").appendChild(btnRetour);
+      // Afficher bannière relecture sur le formulaire
+      const banniereB = document.createElement("div");
+      banniereB.style.cssText = "background:#fff3cd;border:1px solid #f2a541;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:600;color:#856404;display:flex;align-items:center;gap:10px;";
+      banniereB.innerHTML = `<span style="font-size:20px">👁️</span><span><strong>Mode relecture</strong> — Vérifiez et modifiez si besoin. Quand vous avez terminé, cliquez sur "📄 Générer PDF" pour envoyer vos modifications au parent rédacteur.</span>`;
+      document.querySelector(".app").insertBefore(banniereB, document.querySelector(".grid"));
 
-        // Message si tout est ok
-        const msgOk = document.createElement("div");
-        msgOk.style.cssText = "background:#d4edda;border:1px solid #27ae60;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;color:#155724;text-align:center;margin-top:8px;";
-        msgOk.innerHTML = `✅ <strong>Tout est correct ?</strong> Confirmez-le au parent rédacteur qui pourra générer le PDF.`;
-        document.querySelector(".apercu-card").appendChild(msgOk);
-
-        const btnFermer = document.createElement("button");
-        btnFermer.textContent = "✖ Fermer";
-        btnFermer.style.cssText = "margin-top:10px;width:100%;padding:12px;background:#f4f6f8;color:#5d6b7b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;";
-        btnFermer.onclick = () => modal.classList.remove("open");
-        document.querySelector(".apercu-card").appendChild(btnFermer);
-
-        // Pré-générer le lien retour
+      // Modifier le bouton PDF pour qu'en mode relecture il génère un lien ?retour=
+      document.getElementById("print").removeEventListener("click", ouvrirApercu);
+      document.getElementById("print").onclick = () => {
+        // Générer le lien retour avec les données ACTUELLES (après modifs de Parent B)
         const lienRetour = genererLien("retour");
-        if (lienRetour) document.getElementById("retour-url").value = lienRetour;
+        if (!lienRetour) return;
 
-        await ouvrirApercu();
-      }, 800);
+        // Afficher une mini modale de partage
+        const overlay = document.createElement("div");
+        overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:30000;display:flex;align-items:center;justify-content:center;padding:16px;";
+        overlay.innerHTML = `
+          <div style="background:#fff;border-radius:16px;padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+            <div style="font-size:16px;font-weight:800;margin-bottom:12px;">📤 Envoyer au parent rédacteur</div>
+            <p style="font-size:13px;color:#5d6b7b;margin-bottom:12px;">Copiez ce lien et envoyez-le au 1er parent. Il verra vos modifications surlignées en rouge.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+              <input id="retour-url-final" type="text" readonly value="${lienRetour}" style="flex:1;border:1px solid #d6dde5;border-radius:8px;padding:8px 10px;font-size:11px;background:#f4f6f8;"/>
+              <button id="btn-copier-retour" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copier</button>
+            </div>
+            <div id="retour-copie-ok" style="display:none;color:#27ae60;font-size:12px;font-weight:600;margin-bottom:8px;">✅ Lien copié ! Vous pouvez fermer cette fenêtre.</div>
+            <button onclick="this.closest('div[style]').remove()" style="width:100%;padding:11px;background:#f4f6f8;color:#5d6b7b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">✖ Fermer</button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Bouton copier
+        document.getElementById("btn-copier-retour").onclick = () => {
+          navigator.clipboard.writeText(lienRetour).then(() => {
+            effacerSauvegarde(); // Effacer le storage de Parent B
+            document.getElementById("retour-copie-ok").style.display = "block";
+          });
+        };
+      };
 
       return true;
     } catch(e) {
