@@ -427,7 +427,29 @@ function genererLien(type) {
 }
 
 function genererLienRelecture() {
+  // Sauvegarder la version originale au moment de générer le lien
+  sauvegarder();
+  setTimeout(() => {
+    const savedRaw = localStorage.getItem(SAVE_KEY);
+    if (savedRaw) localStorage.setItem(SAVE_KEY_ORIGINAL, savedRaw);
+  }, 100);
   return genererLien("relecture");
+}
+
+// Génère un lien retour qui embarque AUSSI la version originale pour comparaison
+function genererLienRetourAvecOriginal() {
+  try {
+    const dataModif    = collecterDonnees();
+    const savedRaw     = localStorage.getItem(SAVE_KEY_ORIGINAL) || localStorage.getItem(SAVE_KEY);
+    const dataOriginal = savedRaw ? JSON.parse(savedRaw) : null;
+
+    const payload = { modif: dataModif, original: dataOriginal };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    return `${window.location.origin}${window.location.pathname}?retour=${encoded}`;
+  } catch(e) {
+    console.error("Erreur génération lien retour", e);
+    return null;
+  }
 }
 
 function copierLienRelecture() {
@@ -545,8 +567,8 @@ function verifierLienRelecture() {
         // Fermer la modale d'aperçu si elle est ouverte
         fermerApercu();
 
-        // Générer le lien retour avec les données ACTUELLES (après modifs de Parent B)
-        const lienRetour = genererLien("retour");
+        // Générer le lien retour avec les données ACTUELLES + version originale pour comparaison
+        const lienRetour = genererLienRetourAvecOriginal();
         if (!lienRetour) return;
 
         // Afficher une mini modale de partage
@@ -585,19 +607,18 @@ function verifierLienRelecture() {
   // ---- MODE RETOUR (Parent A reçoit les modifications) ----
   if (encodedRetour) {
     try {
-      const dataRetour = JSON.parse(decodeURIComponent(escape(atob(encodedRetour))));
+      const payload = JSON.parse(decodeURIComponent(escape(atob(encodedRetour))));
+
+      // Supporter les deux formats : {modif, original} ou directement les données
+      const dataRetour = payload.modif || payload;
+      const original   = payload.original || null;
+
       if (!dataRetour.classe) return false;
 
       document.getElementById("screen-accueil").style.display = "none";
       document.getElementById("screen-app").style.display     = "block";
 
-      // Récupérer la version ORIGINALE de Parent A AVANT de remplir le formulaire
-      const savedRaw  = localStorage.getItem(SAVE_KEY_ORIGINAL) || localStorage.getItem(SAVE_KEY);
-      const original  = savedRaw ? JSON.parse(savedRaw) : null;
-
-      // Désactiver temporairement la sauvegarde auto pendant le remplissage
-      // pour éviter d'écraser la version originale
-      const _sauvegarderOrig = sauvegarder;
+      // Désactiver la sauvegarde auto pendant le remplissage
       window._sauvegardeDesactivee = true;
 
       // Remplir avec la version retour
