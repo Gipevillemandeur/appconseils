@@ -378,7 +378,24 @@
 
         <div class="apercu-btns">
           <button class="btn btn-annuler" onclick="fermerApercu()">✏️ Corriger</button>
-          <button class="btn btn-confirmer" onclick="confirmerPDF()">📥 Télécharger le PDF</button>
+          <button class="btn btn-confirmer" onclick="demanderConfirmation()">📥 Télécharger le PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modale confirmation relecture -->
+    <div id="modal-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:30000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.25);text-align:center;">
+        <div style="font-size:28px;margin-bottom:12px;">🤔</div>
+        <div style="font-size:17px;font-weight:800;color:#1b1f24;margin-bottom:8px;">Pas besoin de relecture ?</div>
+        <div style="font-size:13px;color:#5d6b7b;margin-bottom:24px;">Le 2ème parent délégué a-t-il eu l'occasion de vérifier ce compte rendu ?</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button onclick="confirmerPDF()" style="background:#1f6f8b;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">
+            📥 Non, je télécharge directement
+          </button>
+          <button onclick="revenirRelecture()" style="background:#f2a541;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">
+            🔗 Si, je l'envoie d'abord au 2ème parent
+          </button>
         </div>
       </div>
     </div>

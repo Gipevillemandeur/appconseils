@@ -398,7 +398,24 @@ function fermerApercu() {
   iframe.src = "";
 }
 
+function demanderConfirmation() {
+  const modal = document.getElementById("modal-confirmation");
+  modal.style.display = "flex";
+}
+
+function fermerConfirmation() {
+  const modal = document.getElementById("modal-confirmation");
+  modal.style.display = "none";
+}
+
+function revenirRelecture() {
+  // Ferme la confirmation et revient à l'aperçu avec le lien de relecture visible
+  fermerConfirmation();
+  // Le lien de relecture est déjà visible dans la modale d'aperçu
+}
+
 function confirmerPDF() {
+  fermerConfirmation();
   fermerApercu();
   generatePDF(false); // false = télécharger
 }
