@@ -497,34 +497,82 @@ function remplirFormulaire(data) {
 }
 
 // Afficher les différences en rouge entre version originale et version retour
-// Génère le HTML diff entre deux textes (ligne par ligne)
+// Diff au niveau du MOT entre deux chaînes
+function diffMots(origStr, newStr) {
+  if (origStr === newStr) return origStr;
+
+  const origMots = (origStr || "").split(/(\s+)/);
+  const newMots  = (newStr  || "").split(/(\s+)/);
+
+  // Algorithme LCS (Longest Common Subsequence) sur les mots
+  const m = origMots.length;
+  const n = newMots.length;
+  const dp = Array.from({length: m + 1}, () => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (origMots[i-1] === newMots[j-1]) {
+        dp[i][j] = dp[i-1][j-1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+      }
+    }
+  }
+
+  // Reconstruire le diff
+  let html = "";
+  let i = m, j = n;
+  const parts = [];
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && origMots[i-1] === newMots[j-1]) {
+      parts.unshift({ type: "same", val: origMots[i-1] });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      parts.unshift({ type: "add", val: newMots[j-1] });
+      j--;
+    } else {
+      parts.unshift({ type: "del", val: origMots[i-1] });
+      i--;
+    }
+  }
+
+  parts.forEach(p => {
+    if (p.type === "same") html += p.val;
+    else if (p.type === "add") html += `<span class="diff-add">${p.val}</span>`;
+    else html += `<span class="diff-del">${p.val}</span>`;
+  });
+
+  return html;
+}
+
+// Diff ligne par ligne, puis mot par mot dans chaque ligne
 function diffTexte(origStr, newStr) {
   if (origStr === newStr) return null;
+
   const origLines = (origStr || "").split("\n");
   const newLines  = (newStr  || "").split("\n");
-
+  const maxLen    = Math.max(origLines.length, newLines.length);
   let html = "";
 
-  // Lignes supprimées (dans orig mais pas dans new)
-  origLines.forEach(line => {
-    if (!newLines.includes(line) && line.trim() !== "") {
-      html += `<span class="diff-del">${line}</span>\n`;
-    }
-  });
+  for (let i = 0; i < maxLen; i++) {
+    const lo = origLines[i] !== undefined ? origLines[i] : null;
+    const ln = newLines[i]  !== undefined ? newLines[i]  : null;
 
-  // Lignes ajoutées (dans new mais pas dans orig)
-  newLines.forEach(line => {
-    if (!origLines.includes(line) && line.trim() !== "") {
-      html += `<span class="diff-add">${line}</span>\n`;
+    if (lo === null) {
+      // Ligne ajoutée
+      html += `<span class="diff-add">${ln}</span>\n`;
+    } else if (ln === null) {
+      // Ligne supprimée
+      html += `<span class="diff-del">${lo}</span>\n`;
+    } else if (lo === ln) {
+      // Ligne identique
+      html += lo + "\n";
+    } else {
+      // Ligne modifiée → diff au niveau du mot
+      html += diffMots(lo, ln) + "\n";
     }
-  });
-
-  // Lignes inchangées
-  newLines.forEach(line => {
-    if (origLines.includes(line)) {
-      html += line + "\n";
-    }
-  });
+  }
 
   return html.trim();
 }
@@ -602,11 +650,36 @@ function afficherDifferences(original, retour) {
     el.parentNode.insertBefore(diffDiv, el.nextSibling);
   });
 
-  // Comparer les présences
+  // Comparer présences + matières + profs
+  const rows = document.querySelectorAll("#subjects-form .row:not(.header)");
   (retour.presences || []).forEach((p, i) => {
-    const rows = document.querySelectorAll("#subjects-form .row:not(.header)");
     const orig = (original.presences || [])[i];
     if (!orig || !rows[i]) return;
+    const inputs = rows[i].querySelectorAll("input");
+
+    // Diff matière
+    if (orig.matiere !== p.matiere && inputs[0]) {
+      const diffDiv = document.createElement("div");
+      diffDiv.className = "diff-display no-print";
+      diffDiv.innerHTML = diffMots(orig.matiere, p.matiere);
+      diffDiv.style.cssText = "font-size:12px;margin-top:2px;background:#fffdf0;padding:2px 4px;border-radius:4px;";
+      inputs[0].style.opacity = "0.4";
+      inputs[0].parentNode.insertBefore(diffDiv, inputs[0].nextSibling);
+      nbDiffs++;
+    }
+
+    // Diff prof
+    if (orig.prof !== p.prof && inputs[1]) {
+      const diffDiv = document.createElement("div");
+      diffDiv.className = "diff-display no-print";
+      diffDiv.innerHTML = diffMots(orig.prof, p.prof);
+      diffDiv.style.cssText = "font-size:12px;margin-top:2px;background:#fffdf0;padding:2px 4px;border-radius:4px;";
+      inputs[1].style.opacity = "0.4";
+      inputs[1].parentNode.insertBefore(diffDiv, inputs[1].nextSibling);
+      nbDiffs++;
+    }
+
+    // Diff présence
     if (orig.present !== p.present) {
       const btn = rows[i].querySelector(".presence-btn");
       if (btn) {
