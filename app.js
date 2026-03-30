@@ -429,6 +429,10 @@ function genererLienRelecture() {
 function copierLienRelecture() {
   const input = document.getElementById("relecture-url");
   navigator.clipboard.writeText(input.value).then(() => {
+    // Sauvegarder la version originale de Parent A pour comparaison future
+    const savedRaw = localStorage.getItem(SAVE_KEY);
+    if (savedRaw) localStorage.setItem(SAVE_KEY_ORIGINAL, savedRaw);
+
     const confirm = document.getElementById("copie-confirmation");
     confirm.style.display = "block";
     setTimeout(() => { confirm.style.display = "none"; }, 2500);
@@ -534,6 +538,9 @@ function verifierLienRelecture() {
       // Modifier le bouton PDF pour qu'en mode relecture il génère un lien ?retour=
       document.getElementById("print").removeEventListener("click", ouvrirApercu);
       document.getElementById("print").onclick = () => {
+        // Fermer la modale d'aperçu si elle est ouverte
+        fermerApercu();
+
         // Générer le lien retour avec les données ACTUELLES (après modifs de Parent B)
         const lienRetour = genererLien("retour");
         if (!lienRetour) return;
@@ -580,8 +587,8 @@ function verifierLienRelecture() {
       document.getElementById("screen-accueil").style.display = "none";
       document.getElementById("screen-app").style.display     = "block";
 
-      // Récupérer la sauvegarde originale de Parent A
-      const savedRaw  = localStorage.getItem(SAVE_KEY);
+      // Récupérer la version ORIGINALE de Parent A (sauvegardée au moment de l'envoi)
+      const savedRaw  = localStorage.getItem(SAVE_KEY_ORIGINAL) || localStorage.getItem(SAVE_KEY);
       const original  = savedRaw ? JSON.parse(savedRaw) : null;
 
       // Remplir avec la version retour
@@ -956,7 +963,8 @@ function switchTab(tab) {
 //  SAUVEGARDE AUTOMATIQUE (localStorage)
 // ============================================================
 
-const SAVE_KEY = "appconseils_sauvegarde";
+const SAVE_KEY          = "appconseils_sauvegarde";
+const SAVE_KEY_ORIGINAL = "appconseils_sauvegarde_originale";
 
 function sauvegarder() {
   const classe = classSelect.value;
@@ -994,6 +1002,7 @@ function sauvegarder() {
 
 function effacerSauvegarde() {
   localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(SAVE_KEY_ORIGINAL);
 }
 
 function restaurerSauvegarde(data) {
