@@ -342,6 +342,10 @@ classSelect.addEventListener("change", async (e) => {
 document.getElementById("print").addEventListener("click", () => ouvrirApercu());
 
 async function ouvrirApercu() {
+  // Sauvegarder la version originale dès l'ouverture (pour comparaison future)
+  const savedRaw = localStorage.getItem(SAVE_KEY);
+  if (savedRaw) localStorage.setItem(SAVE_KEY_ORIGINAL, savedRaw);
+
   // Ouvrir la modale avec le spinner
   document.getElementById("modal-apercu").classList.add("open");
   document.getElementById("apercu-loading").style.display = "block";
@@ -587,13 +591,23 @@ function verifierLienRelecture() {
       document.getElementById("screen-accueil").style.display = "none";
       document.getElementById("screen-app").style.display     = "block";
 
-      // Récupérer la version ORIGINALE de Parent A (sauvegardée au moment de l'envoi)
+      // Récupérer la version ORIGINALE de Parent A AVANT de remplir le formulaire
       const savedRaw  = localStorage.getItem(SAVE_KEY_ORIGINAL) || localStorage.getItem(SAVE_KEY);
       const original  = savedRaw ? JSON.parse(savedRaw) : null;
 
+      // Désactiver temporairement la sauvegarde auto pendant le remplissage
+      // pour éviter d'écraser la version originale
+      const _sauvegarderOrig = sauvegarder;
+      window._sauvegardeDesactivee = true;
+
       // Remplir avec la version retour
       remplirFormulaire(dataRetour);
-      activerSauvegardeAuto();
+
+      // Réactiver la sauvegarde auto après le remplissage
+      setTimeout(() => {
+        window._sauvegardeDesactivee = false;
+        activerSauvegardeAuto();
+      }, 1000);
 
       // Afficher les différences après rendu
       setTimeout(() => {
@@ -967,6 +981,7 @@ const SAVE_KEY          = "appconseils_sauvegarde";
 const SAVE_KEY_ORIGINAL = "appconseils_sauvegarde_originale";
 
 function sauvegarder() {
+  if (window._sauvegardeDesactivee) return; // Désactivée pendant restauration
   const classe = classSelect.value;
   if (!classe) return; // Rien à sauvegarder si pas de classe
 
