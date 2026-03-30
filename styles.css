@@ -682,3 +682,23 @@ body {
     font-size: 18px;
   }
 }
+
+/* ============================================================
+   STYLES DIFF (modifications Parent B)
+   ============================================================ */
+.diff-del {
+  color: #e74c3c;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.diff-add {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+/* Cacher les éléments diff à l'impression */
+@media print {
+  .diff-display { display: none !important; }
+  .no-print { display: none !important; }
+}

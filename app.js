@@ -497,29 +497,109 @@ function remplirFormulaire(data) {
 }
 
 // Afficher les différences en rouge entre version originale et version retour
+// Génère le HTML diff entre deux textes (ligne par ligne)
+function diffTexte(origStr, newStr) {
+  if (origStr === newStr) return null;
+  const origLines = (origStr || "").split("\n");
+  const newLines  = (newStr  || "").split("\n");
+
+  let html = "";
+
+  // Lignes supprimées (dans orig mais pas dans new)
+  origLines.forEach(line => {
+    if (!newLines.includes(line) && line.trim() !== "") {
+      html += `<span class="diff-del">${line}</span>\n`;
+    }
+  });
+
+  // Lignes ajoutées (dans new mais pas dans orig)
+  newLines.forEach(line => {
+    if (!origLines.includes(line) && line.trim() !== "") {
+      html += `<span class="diff-add">${line}</span>\n`;
+    }
+  });
+
+  // Lignes inchangées
+  newLines.forEach(line => {
+    if (origLines.includes(line)) {
+      html += line + "\n";
+    }
+  });
+
+  return html.trim();
+}
+
 function afficherDifferences(original, retour) {
-  const champsAComparer = [
+  // Champs texte multilignes
+  const champsTexte = [
     ["input-parents", "parents"], ["input-students", "students"],
     ["input-others", "others"], ["input-obs-principal", "obsPrincipal"],
     ["input-obs-pp", "obsPP"], ["input-obs-eleves", "obsEleves"],
-    ["input-obs-parents", "obsParents"], ["input-fel", "fel"],
-    ["input-comp", "comp"], ["input-enc", "enc"],
-    ["input-avc", "avc"], ["input-avt", "avt"], ["input-ava", "ava"],
-    ["input-principal", "principal"],
+    ["input-obs-parents", "obsParents"],
   ];
 
+  // Champs chiffres
+  const champsChiffres = [
+    ["input-fel", "fel"], ["input-comp", "comp"], ["input-enc", "enc"],
+    ["input-avc", "avc"], ["input-avt", "avt"], ["input-ava", "ava"],
+  ];
+
+  // Champs select (principal)
+  const champsSelect = [["input-principal", "principal"]];
+
   let nbDiffs = 0;
-  champsAComparer.forEach(([id, key]) => {
+
+  // Traitement des textareas — afficher le diff inline
+  champsTexte.forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (!el) return;
     const valOrig   = (original[key] || "").trim();
     const valRetour = (retour[key]   || "").trim();
-    if (valOrig !== valRetour) {
-      el.style.border     = "2px solid #e74c3c";
-      el.style.background = "#fff5f5";
-      el.style.color      = "#c0392b";
-      nbDiffs++;
-    }
+    if (valOrig === valRetour) return;
+
+    nbDiffs++;
+
+    // Remplacer le textarea par un div avec le diff
+    const diffHtml = diffTexte(valOrig, valRetour);
+    const diffDiv  = document.createElement("div");
+    diffDiv.className = "diff-display no-print";
+    diffDiv.innerHTML = diffHtml.replace(/\n/g, "<br>");
+    diffDiv.style.cssText = "border:1px solid #d6dde5;border-radius:10px;padding:8px 10px;font-size:14px;font-family:inherit;background:#fffdf0;white-space:pre-wrap;min-height:40px;";
+    el.style.display = "none";
+    el.parentNode.insertBefore(diffDiv, el.nextSibling);
+  });
+
+  // Traitement des chiffres — afficher barré → nouveau
+  champsChiffres.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const valOrig   = (original[key] || "").trim();
+    const valRetour = (retour[key]   || "").trim();
+    if (valOrig === valRetour) return;
+
+    nbDiffs++;
+    const diffDiv = document.createElement("div");
+    diffDiv.className = "diff-display no-print";
+    diffDiv.innerHTML = `<span class="diff-del">${valOrig || "0"}</span> → <span class="diff-add">${valRetour || "0"}</span>`;
+    diffDiv.style.cssText = "font-size:14px;font-weight:700;margin-top:4px;";
+    el.style.opacity = "0.3";
+    el.parentNode.insertBefore(diffDiv, el.nextSibling);
+  });
+
+  // Traitement des selects
+  champsSelect.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const valOrig   = (original[key] || "").trim();
+    const valRetour = (retour[key]   || "").trim();
+    if (valOrig === valRetour) return;
+
+    nbDiffs++;
+    const diffDiv = document.createElement("div");
+    diffDiv.className = "diff-display no-print";
+    diffDiv.innerHTML = `<span class="diff-del">${valOrig || "—"}</span> → <span class="diff-add">${valRetour || "—"}</span>`;
+    diffDiv.style.cssText = "font-size:13px;margin-top:4px;";
+    el.parentNode.insertBefore(diffDiv, el.nextSibling);
   });
 
   // Comparer les présences
@@ -529,7 +609,13 @@ function afficherDifferences(original, retour) {
     if (!orig || !rows[i]) return;
     if (orig.present !== p.present) {
       const btn = rows[i].querySelector(".presence-btn");
-      if (btn) { btn.style.outline = "3px solid #e74c3c"; btn.style.outlineOffset = "2px"; }
+      if (btn) {
+        const diffSpan = document.createElement("span");
+        diffSpan.className = "diff-display no-print";
+        diffSpan.innerHTML = `<span class="diff-del">${orig.present}</span>→<span class="diff-add">${p.present}</span>`;
+        diffSpan.style.cssText = "font-size:11px;display:block;text-align:center;margin-top:2px;";
+        btn.parentNode.appendChild(diffSpan);
+      }
       nbDiffs++;
     }
   });
