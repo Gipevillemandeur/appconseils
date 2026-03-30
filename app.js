@@ -399,6 +399,11 @@ function fermerApercu() {
 }
 
 function demanderConfirmation() {
+  // Si on arrive du lien retour, la relecture est déjà faite → télécharger direct
+  if (window._modeRetour) {
+    confirmerPDF();
+    return;
+  }
   const modal = document.getElementById("modal-confirmation");
   modal.style.display = "flex";
 }
@@ -821,6 +826,9 @@ function verifierLienRelecture() {
       document.getElementById("screen-accueil").style.display = "none";
       document.getElementById("screen-app").style.display     = "block";
 
+      // Marquer qu'on est en mode retour (relecture déjà faite)
+      window._modeRetour = true;
+
       // Désactiver la sauvegarde auto pendant le remplissage
       window._sauvegardeDesactivee = true;
 
@@ -1174,6 +1182,11 @@ window.addEventListener("DOMContentLoaded", () => {
     window.onclick   = (e) => { if (e.target === helpModal) helpModal.style.display = "none"; };
   }
 });
+
+// ============================================================
+//  MODE RETOUR (flag global)
+// ============================================================
+window._modeRetour = false;
 
 // ============================================================
 //  ONGLETS MOBILE
