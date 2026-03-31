@@ -1149,9 +1149,67 @@ async function generatePDF(apercuSeulement = false) {
     // Retourner un Blob pour l'afficher dans l'iframe
     return doc.output("blob");
   } else {
-    // Télécharger le PDF
-    doc.save(`${nomFichier}.pdf`);
+    // Envoyer au GIPE via Google Apps Script
+    await envoyerAuGIPE(doc, classe, trimestre, formatDate(document.getElementById("input-date").value), nomFichier);
     effacerSauvegarde();
+  }
+}
+
+// ============================================================
+//  ENVOI AU GIPE
+// ============================================================
+const GIPE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE-vzGYC1vkDfs8PeUK7Y-Vzx8HvMOqXWtT_aYejBsz1VNqB2zcvbwDrkDCI7p2DxPDQ/exec";
+
+async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
+  // Afficher un indicateur d'envoi
+  const overlay = document.createElement("div");
+  overlay.id = "envoi-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50000;display:flex;align-items:center;justify-content:center;";
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+      <div id="envoi-icone" style="font-size:40px;margin-bottom:12px;">📨</div>
+      <div id="envoi-titre" style="font-size:17px;font-weight:800;color:#1b1f24;margin-bottom:8px;">Envoi en cours...</div>
+      <div id="envoi-message" style="font-size:13px;color:#5d6b7b;">Le compte rendu est envoyé au GIPE, veuillez patienter.</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  try {
+    // Convertir le PDF en base64
+    const pdfBase64 = doc.output("datauristring").split(",")[1];
+
+    const response = await fetch(GIPE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pdf:       pdfBase64,
+        classe:    classe,
+        trimestre: trimestre,
+        date:      date
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      document.getElementById("envoi-icone").textContent   = "✅";
+      document.getElementById("envoi-titre").textContent   = "Envoyé au GIPE !";
+      document.getElementById("envoi-message").textContent = `Le compte rendu de la classe ${classe} a bien été envoyé à contact@gipevillemandeur.com`;
+    } else {
+      throw new Error(result.error || "Erreur inconnue");
+    }
+  } catch (err) {
+    console.error("Erreur envoi GIPE:", err);
+    document.getElementById("envoi-icone").textContent   = "⚠️";
+    document.getElementById("envoi-titre").textContent   = "Envoi échoué";
+    document.getElementById("envoi-message").innerHTML   = `Une erreur est survenue. <br><small style="color:#e74c3c">${err.message}</small><br><br>Le PDF va être téléchargé à la place.`;
+    // Fallback : télécharger le PDF si l'envoi échoue
+    doc.save(nomFichier + ".pdf");
+  } finally {
+    // Fermer l'overlay après 3 secondes
+    setTimeout(() => {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 3000);
   }
 }
 
