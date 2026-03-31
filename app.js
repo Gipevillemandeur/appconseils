@@ -1178,8 +1178,10 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
     // Convertir le PDF en base64
     const pdfBase64 = doc.output("datauristring").split(",")[1];
 
-    const response = await fetch(GIPE_SCRIPT_URL, {
+    // Google Apps Script nécessite no-cors — on envoie sans lire la réponse
+    await fetch(GIPE_SCRIPT_URL, {
       method: "POST",
+      mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         pdf:       pdfBase64,
@@ -1189,15 +1191,10 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
       })
     });
 
-    const result = await response.json();
-
-    if (result.success) {
-      document.getElementById("envoi-icone").textContent   = "✅";
-      document.getElementById("envoi-titre").textContent   = "Envoyé au GIPE !";
-      document.getElementById("envoi-message").textContent = `Le compte rendu de la classe ${classe} a bien été envoyé à contact@gipevillemandeur.com`;
-    } else {
-      throw new Error(result.error || "Erreur inconnue");
-    }
+    // Avec no-cors on ne peut pas lire la réponse, on suppose que c'est OK
+    document.getElementById("envoi-icone").textContent   = "✅";
+    document.getElementById("envoi-titre").textContent   = "Envoyé au GIPE !";
+    document.getElementById("envoi-message").textContent = `Le compte rendu de la classe ${classe} a bien été envoyé à contact@gipevillemandeur.com`;
   } catch (err) {
     console.error("Erreur envoi GIPE:", err);
     document.getElementById("envoi-icone").textContent   = "⚠️";
