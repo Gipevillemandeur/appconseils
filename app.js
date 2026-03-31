@@ -1178,8 +1178,11 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
     // Convertir le PDF en base64
     const pdfBase64 = doc.output("datauristring").split(",")[1];
 
-    // Google Apps Script nécessite no-cors — on envoie sans lire la réponse
-    await fetch(GIPE_SCRIPT_URL, {
+    // Télécharger le PDF sur l'appareil du parent (sécurité)
+    doc.save(nomFichier + ".pdf");
+
+    // Envoyer au GIPE en parallèle (no-cors = pas de retour possible avec Google Apps Script)
+    fetch(GIPE_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
@@ -1189,19 +1192,16 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
         trimestre: trimestre,
         date:      date
       })
-    });
+    }).catch(err => console.warn("Envoi GIPE:", err));
 
-    // Avec no-cors on ne peut pas lire la réponse, on suppose que c'est OK
     document.getElementById("envoi-icone").textContent   = "✅";
-    document.getElementById("envoi-titre").textContent   = "Envoyé au GIPE !";
-    document.getElementById("envoi-message").textContent = `Le compte rendu de la classe ${classe} a bien été envoyé à contact@gipevillemandeur.com`;
+    document.getElementById("envoi-titre").textContent   = "PDF téléchargé et envoyé au GIPE !";
+    document.getElementById("envoi-message").textContent = `Le PDF a été sauvegardé sur votre appareil et envoyé à contact@gipevillemandeur.com`;
   } catch (err) {
     console.error("Erreur envoi GIPE:", err);
     document.getElementById("envoi-icone").textContent   = "⚠️";
-    document.getElementById("envoi-titre").textContent   = "Envoi échoué";
-    document.getElementById("envoi-message").innerHTML   = `Une erreur est survenue. <br><small style="color:#e74c3c">${err.message}</small><br><br>Le PDF va être téléchargé à la place.`;
-    // Fallback : télécharger le PDF si l'envoi échoue
-    doc.save(nomFichier + ".pdf");
+    document.getElementById("envoi-titre").textContent   = "Attention";
+    document.getElementById("envoi-message").innerHTML   = `Le PDF a été sauvegardé sur votre appareil mais l'envoi au GIPE a peut-être échoué. Vérifiez votre connexion et renvoyez si nécessaire.`;
   } finally {
     // Fermer l'overlay après 3 secondes
     setTimeout(() => {
