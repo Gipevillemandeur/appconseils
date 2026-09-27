@@ -7,7 +7,6 @@ const classSelect    = document.getElementById("input-class");
 const loadSampleBtn  = document.getElementById("load-sample");
 
 let classCodes = {};
-let allClasses = [];
 let config     = {};
 
 // ============================================================
