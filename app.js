@@ -1847,11 +1847,34 @@ Les parents délégués`);
 
 document.getElementById("listing-eleves").addEventListener("click", () => {
   const classe = classSelect.value;
-  if (!classe) { alert("Sélectionnez une classe"); return; }
-  window.open(
-    `listing-eleves.html?classe=${encodeURIComponent(classe)}&trimestre=${encodeURIComponent(document.getElementById("input-term").value)}&date=${document.getElementById("input-date").value}`,
-    "_blank"
-  );
+
+  if (!classe) {
+    alert("Sélectionnez une classe");
+    return;
+  }
+
+  const code = validatedClassCodes[classe] || "";
+
+  // Une classe sans code validé ne peut pas ouvrir le listing.
+  if (!code) {
+    alert("Accès refusé : le code de la classe n'a pas été validé.");
+    return;
+  }
+
+  const trimestre =
+    document.getElementById("input-term").value;
+
+  const date =
+    document.getElementById("input-date").value;
+
+  const url =
+    `listing-eleves.html` +
+    `?classe=${encodeURIComponent(classe)}` +
+    `&code=${encodeURIComponent(code)}` +
+    `&trimestre=${encodeURIComponent(trimestre)}` +
+    `&date=${encodeURIComponent(date)}`;
+
+  window.open(url, "_blank");
 });
 
 loadSampleBtn.addEventListener("click", () => {
