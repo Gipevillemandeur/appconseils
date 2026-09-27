@@ -143,212 +143,818 @@ function applyClassSubjects(entries = []) {
 }
 
 // ============================================================
-//  CHARGEMENT À LA DEMANDE (une seule classe)
+//  API DASHBOARD GIPE
 // ============================================================
+
+let allClasses = [];
+let classInfo = {};
+
+// Les codes validés restent uniquement en mémoire pendant
+// la session de cette page.
+// Ils ne sont jamais enregistrés dans localStorage/sessionStorage.
+const validatedClassCodes = {};
+
+function getDashboardApi() {
+  return config.dashboardApi ||
+    "https://admin.gipevillemandeur.com/api/conseils/public";
+}
+
+
+// ============================================================
+//  CHARGEMENT D'UNE CLASSE
+// ============================================================
+
 async function loadClasseData(className) {
-  const { apiKey, spreadsheetId } = config.googleSheets;
   const loading = document.getElementById("subjects-loading");
+
   loading.style.display = "block";
-  subjectForm.querySelectorAll(".row:not(.header)").forEach(r => r.remove());
+
+  subjectForm
+    .querySelectorAll(".row:not(.header)")
+    .forEach(r => r.remove());
+
   try {
-    const url  = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(className)}!A:C?key=${apiKey}`;
+    const code = validatedClassCodes[className] || "";
+
+    const params = new URLSearchParams();
+    params.set("classe", className);
+
+    if (code) {
+      params.set("code", code);
+    }
+
+    const url = `${getDashboardApi()}?${params.toString()}`;
+
     const resp = await fetch(url);
     const json = await resp.json();
-    const entries = json.values
-      ? json.values.slice(1).map(row => ({ matiere: row[0] || "", prof: row[1] || "", present: row[2] || "" }))
+
+    if (!resp.ok) {
+      throw new Error(
+        json.error || "Erreur de chargement de la classe."
+      );
+    }
+
+    // --------------------------------------------------------
+    // Direction
+    // --------------------------------------------------------
+
+    if (Array.isArray(json.direction)) {
+      const principals = json.direction
+        .map(item => {
+          if (typeof item === "string") {
+            return item;
+          }
+
+          const nom = item.display_name || "";
+          const role = item.role || "";
+
+          return role
+            ? `${nom} (${role})`
+            : nom;
+        })
+        .filter(Boolean);
+
+      setPrincipalOptions(principals);
+    }
+
+    // --------------------------------------------------------
+    // Équipe pédagogique
+    // --------------------------------------------------------
+
+    const entries = Array.isArray(json.teachers)
+      ? json.teachers.map(teacher => ({
+          matiere: teacher.subject || "",
+          prof: teacher.prof || "",
+          present: "Oui"
+        }))
       : [];
+
     applyClassSubjects(entries);
+
+    // --------------------------------------------------------
+    // Élèves
+    // --------------------------------------------------------
+
+    window.gipeClasseData = {
+      classe: json.class || null,
+      students: Array.isArray(json.students)
+        ? json.students
+        : [],
+      teachers: Array.isArray(json.teachers)
+        ? json.teachers
+        : [],
+      direction: Array.isArray(json.direction)
+        ? json.direction
+        : []
+    };
+
+    return json;
+
   } catch (err) {
-    console.error("Erreur chargement classe :", err);
+    console.error(
+      "Erreur chargement classe Dashboard :",
+      err
+    );
+
     applyClassSubjects([]);
+
+    throw err;
+
   } finally {
     loading.style.display = "none";
   }
 }
 
+
 // ============================================================
-//  CHARGEMENT INITIAL (meta + liste classes + direction)
+//  VÉRIFICATION DU CODE PAR LE DASHBOARD
 // ============================================================
-async function loadConfig() {
+
+async function verifierAccesClasse(classe, code) {
+
   try {
-    const resp = await fetch("data/config.json");
-    config = await resp.json();
+    const params = new URLSearchParams();
+
+    params.set("classe", classe);
+    params.set("code", code || "");
+
+    const resp = await fetch(
+      `${getDashboardApi()}?${params.toString()}`
+    );
+
+    const json = await resp.json();
+
+    if (!resp.ok) {
+      return {
+        ok: false,
+        error: json.error || "Code incorrect."
+      };
+    }
+
+    return {
+      ok: true,
+      data: json
+    };
+
   } catch (err) {
-    showAccueilErreur(); return;
+
+    console.error(
+      "Erreur vérification accès :",
+      err
+    );
+
+    return {
+      ok: false,
+      error: "Impossible de contacter le serveur GIPE."
+    };
   }
-  if (config.googleSheets?.apiKey) await loadMeta();
 }
 
-async function loadMeta() {
-  const { apiKey, spreadsheetId } = config.googleSheets;
+
+// ============================================================
+//  CHARGEMENT INITIAL
+// ============================================================
+
+async function loadConfig() {
+
   try {
-    const metaResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`);
-    const metaData = await metaResp.json();
-    const sheetNames = (metaData.sheets || []).map(s => s.properties.title);
 
-    const promises = [];
-    if (sheetNames.includes("code classe")) {
-      promises.push(
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("code classe")}!A:B?key=${apiKey}`)
-          .then(r => r.json()).then(json => {
-            if (json.values) json.values.slice(1).forEach(row => { if (row[0]) classCodes[row[0]] = String(row[1]).trim(); });
-          })
+    const resp = await fetch(
+      "data/config.json"
+    );
+
+    if (!resp.ok) {
+      throw new Error(
+        "Impossible de charger la configuration."
       );
     }
-    if (sheetNames.includes("direction")) {
-      promises.push(
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("direction")}!A:A?key=${apiKey}`)
-          .then(r => r.json()).then(json => {
-            if (json.values) setPrincipalOptions(json.values.flat().slice(1));
-          })
+
+    config = await resp.json();
+
+    if (!config.dashboardApi) {
+      throw new Error(
+        "Adresse API Dashboard absente."
       );
     }
-    await Promise.all(promises);
 
-    allClasses = sheetNames
-      .filter(n => !["code classe", "direction"].includes(n.toLowerCase()))
-      .sort();
+    await loadMeta();
 
-    populateClasseSelects(allClasses);
-    showAccueilFormulaire();
   } catch (err) {
-    console.error("Erreur meta :", err);
+
+    console.error(
+      "Erreur configuration :",
+      err
+    );
+
     showAccueilErreur();
   }
 }
 
+
+// ============================================================
+//  CHARGEMENT DES CLASSES ET DE LA DIRECTION
+// ============================================================
+
+async function loadMeta() {
+
+  try {
+
+    const resp = await fetch(
+      getDashboardApi()
+    );
+
+    if (!resp.ok) {
+      throw new Error(
+        "Impossible de récupérer les données du Dashboard."
+      );
+    }
+
+    const json = await resp.json();
+
+    // --------------------------------------------------------
+    // Classes
+    // --------------------------------------------------------
+
+    const classes = Array.isArray(json.classes)
+      ? json.classes
+      : [];
+
+    classInfo = {};
+
+    classes.forEach(item => {
+
+      if (!item.name) return;
+
+      classInfo[item.name] = {
+        requiresCode: Boolean(
+          item.requiresCode
+        ),
+        level: item.level || "",
+        kind: item.kind || ""
+      };
+    });
+
+    allClasses = classes
+      .map(item => item.name)
+      .filter(Boolean)
+      .sort();
+
+    // --------------------------------------------------------
+    // Direction
+    // --------------------------------------------------------
+
+    if (Array.isArray(json.direction)) {
+
+      const principals = json.direction
+        .map(item => {
+
+          if (typeof item === "string") {
+            return item;
+          }
+
+          const nom =
+            item.display_name || "";
+
+          const role =
+            item.role || "";
+
+          return role
+            ? `${nom} (${role})`
+            : nom;
+        })
+        .filter(Boolean);
+
+      setPrincipalOptions(principals);
+    }
+
+    populateClasseSelects(
+      allClasses
+    );
+
+    showAccueilFormulaire();
+
+  } catch (err) {
+
+    console.error(
+      "Erreur chargement Dashboard :",
+      err
+    );
+
+    showAccueilErreur();
+  }
+}
+
+
+// ============================================================
+//  DIRECTION
+// ============================================================
+
 function setPrincipalOptions(principals) {
-  document.getElementById("input-principal").innerHTML = '<option value="">Selectionner</option>';
-  principals.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = opt.textContent = p;
-    document.getElementById("input-principal").appendChild(opt);
+
+  const select =
+    document.getElementById(
+      "input-principal"
+    );
+
+  if (!select) return;
+
+  select.innerHTML =
+    '<option value="">Selectionner</option>';
+
+  principals.forEach(principal => {
+
+    const opt =
+      document.createElement("option");
+
+    opt.value = principal;
+    opt.textContent = principal;
+
+    select.appendChild(opt);
   });
 }
 
+
+// ============================================================
+//  LISTE DES CLASSES
+// ============================================================
+
 function populateClasseSelects(classes) {
-  const accueilSelect = document.getElementById("accueil-classe");
-  accueilSelect.innerHTML = '<option value="">— Sélectionner —</option>';
-  classSelect.innerHTML   = '<option value="">Selectionner</option>';
-  classes.forEach(n => {
-    [accueilSelect, classSelect].forEach(sel => {
-      const o = document.createElement("option");
-      o.value = o.textContent = n;
-      sel.appendChild(o);
-    });
+
+  const accueilSelect =
+    document.getElementById(
+      "accueil-classe"
+    );
+
+  accueilSelect.innerHTML =
+    '<option value="">— Sélectionner —</option>';
+
+  classSelect.innerHTML =
+    '<option value="">Selectionner</option>';
+
+  classes.forEach(nom => {
+
+    [accueilSelect, classSelect]
+      .forEach(select => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = nom;
+        option.textContent = nom;
+
+        select.appendChild(option);
+      });
   });
 }
+
 
 // ============================================================
 //  ÉCRAN D'ACCUEIL
 // ============================================================
+
 function showAccueilFormulaire() {
-  document.getElementById("accueil-chargement").style.display = "none";
-  document.getElementById("accueil-formulaire").style.display = "flex";
+
+  document.getElementById(
+    "accueil-chargement"
+  ).style.display = "none";
+
+  document.getElementById(
+    "accueil-formulaire"
+  ).style.display = "flex";
 }
+
 
 function showAccueilErreur() {
-  document.getElementById("accueil-chargement").style.display = "none";
-  document.getElementById("accueil-erreur").style.display     = "block";
+
+  document.getElementById(
+    "accueil-chargement"
+  ).style.display = "none";
+
+  document.getElementById(
+    "accueil-erreur"
+  ).style.display = "block";
 }
 
-function updateAccueilBtn() {
-  const btn       = document.getElementById("accueil-btn-commencer");
-  const codeWrap  = document.getElementById("accueil-code-wrap");
-  const codeInput = document.getElementById("accueil-code");
-  const codeErr   = document.getElementById("accueil-code-erreur");
-  const classe    = document.getElementById("accueil-classe").value;
-  const trim      = document.getElementById("accueil-trim").value;
-  const date      = document.getElementById("accueil-date").value;
 
-  // Afficher/cacher le champ code selon la classe choisie
+// ============================================================
+//  BOUTON COMMENCER
+// ============================================================
+
+function updateAccueilBtn() {
+
+  const btn =
+    document.getElementById(
+      "accueil-btn-commencer"
+    );
+
+  const codeWrap =
+    document.getElementById(
+      "accueil-code-wrap"
+    );
+
+  const codeInput =
+    document.getElementById(
+      "accueil-code"
+    );
+
+  const codeErr =
+    document.getElementById(
+      "accueil-code-erreur"
+    );
+
+  const classe =
+    document.getElementById(
+      "accueil-classe"
+    ).value;
+
+  const trim =
+    document.getElementById(
+      "accueil-trim"
+    ).value;
+
+  const date =
+    document.getElementById(
+      "accueil-date"
+    ).value;
+
+
+  // ----------------------------------------------------------
+  // Affichage du champ code
+  // ----------------------------------------------------------
+
   if (classe) {
-    const codeRaw = classCodes[classe];
-    const aUnCode = codeRaw && codeRaw.toString().trim() !== "";
-    codeWrap.style.display = aUnCode ? "flex" : "none";
-    if (!aUnCode) { codeInput.value = ""; codeErr.style.display = "none"; }
+
+    const info =
+      classInfo[classe];
+
+    const aUnCode =
+      Boolean(info?.requiresCode);
+
+    codeWrap.style.display =
+      aUnCode ? "flex" : "none";
+
+    if (!aUnCode) {
+
+      codeInput.value = "";
+      codeErr.style.display = "none";
+    }
+
   } else {
+
     codeWrap.style.display = "none";
     codeInput.value = "";
     codeErr.style.display = "none";
   }
 
-  // Activer le bouton seulement si tout est rempli
-  const tout = classe && trim && date;
+
+  // ----------------------------------------------------------
+  // Bouton
+  // ----------------------------------------------------------
+
+  const tout =
+    classe && trim && date;
+
   btn.disabled = !tout;
-  if (!classe) btn.textContent = "Sélectionnez une classe…";
-  else if (!trim) btn.textContent = "Sélectionnez un trimestre…";
-  else if (!date) btn.textContent = "Sélectionnez une date…";
-  else btn.textContent = "Commencer ➜";
+
+  if (!classe) {
+
+    btn.textContent =
+      "Sélectionnez une classe…";
+
+  } else if (!trim) {
+
+    btn.textContent =
+      "Sélectionnez un trimestre…";
+
+  } else if (!date) {
+
+    btn.textContent =
+      "Sélectionnez une date…";
+
+  } else {
+
+    btn.textContent =
+      "Commencer ➜";
+  }
 }
 
-document.getElementById("accueil-classe").addEventListener("change", updateAccueilBtn);
-document.getElementById("accueil-trim").addEventListener("change", updateAccueilBtn);
-document.getElementById("accueil-date").addEventListener("change", updateAccueilBtn);
 
-document.getElementById("accueil-btn-commencer").addEventListener("click", async () => {
-  const classe    = document.getElementById("accueil-classe").value;
-  const trimestre = document.getElementById("accueil-trim").value;
-  const date      = document.getElementById("accueil-date").value;
-  if (!classe) return;
+document
+  .getElementById("accueil-classe")
+  .addEventListener(
+    "change",
+    updateAccueilBtn
+  );
 
-  const codeRaw     = classCodes[classe];
-  const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
-  if (codeAttendu && sessionStorage.getItem(`access_${classe}`) !== "granted") {
-    const codeInput = document.getElementById("accueil-code");
-    const codeErr   = document.getElementById("accueil-code-erreur");
-    const codeSaisi = codeInput ? codeInput.value.trim() : "";
-    if (codeSaisi === codeAttendu) {
-      sessionStorage.setItem(`access_${classe}`, "granted");
-      codeErr.style.display = "none";
-    } else {
-      if (codeErr) codeErr.style.display = "block";
-      if (codeInput) codeInput.focus();
+document
+  .getElementById("accueil-trim")
+  .addEventListener(
+    "change",
+    updateAccueilBtn
+  );
+
+document
+  .getElementById("accueil-date")
+  .addEventListener(
+    "change",
+    updateAccueilBtn
+  );
+
+
+// ============================================================
+//  DÉMARRAGE DU CONSEIL
+// ============================================================
+
+document
+  .getElementById("accueil-btn-commencer")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const classe =
+        document.getElementById(
+          "accueil-classe"
+        ).value;
+
+      const trimestre =
+        document.getElementById(
+          "accueil-trim"
+        ).value;
+
+      const date =
+        document.getElementById(
+          "accueil-date"
+        ).value;
+
+      if (!classe) return;
+
+
+      const info =
+        classInfo[classe];
+
+      const requiresCode =
+        Boolean(info?.requiresCode);
+
+
+      // ------------------------------------------------------
+      // Vérification du code
+      // ------------------------------------------------------
+
+      if (requiresCode) {
+
+        const codeInput =
+          document.getElementById(
+            "accueil-code"
+          );
+
+        const codeErr =
+          document.getElementById(
+            "accueil-code-erreur"
+          );
+
+        const codeSaisi =
+          codeInput
+            ? codeInput.value.trim()
+            : "";
+
+
+        // Si ce code n'a pas déjà été validé
+        if (
+          validatedClassCodes[classe] !==
+          codeSaisi
+        ) {
+
+          const verification =
+            await verifierAccesClasse(
+              classe,
+              codeSaisi
+            );
+
+
+          if (!verification.ok) {
+
+            codeErr.textContent =
+              verification.error ||
+              "Code incorrect.";
+
+            codeErr.style.display =
+              "block";
+
+            if (codeInput) {
+              codeInput.focus();
+            }
+
+            return;
+          }
+
+
+          // Code validé :
+          // uniquement en mémoire
+          validatedClassCodes[classe] =
+            codeSaisi;
+
+          codeErr.style.display =
+            "none";
+        }
+      }
+
+
+      // ------------------------------------------------------
+      // Afficher l'application
+      // ------------------------------------------------------
+
+      document.getElementById(
+        "screen-accueil"
+      ).style.display = "none";
+
+      document.getElementById(
+        "screen-app"
+      ).style.display = "block";
+
+
+      classSelect.value =
+        classe;
+
+      document.getElementById(
+        "input-term"
+      ).value =
+        trimestre;
+
+      if (date) {
+
+        document.getElementById(
+          "input-date"
+        ).value =
+          date;
+      }
+
+
+      document.getElementById(
+        "input-class-display"
+      ).value =
+        classe;
+
+      document.getElementById(
+        "input-term-display"
+      ).value =
+        trimestre;
+
+      document.getElementById(
+        "input-date-display"
+      ).value =
+        formatDate(date);
+
+
+      setPreview(
+        "preview-title",
+        `Conseil de classe ${classe || "—"}`
+      );
+
+      setPreview(
+        "preview-term",
+        trimestre || "—"
+      );
+
+      setPreview(
+        "header-date",
+        formatDate(date)
+      );
+
+
+      try {
+
+        await loadClasseData(
+          classe
+        );
+
+        activerSauvegardeAuto();
+
+      } catch (err) {
+
+        console.error(
+          "Impossible de charger la classe :",
+          err
+        );
+
+        document.getElementById(
+          "screen-app"
+        ).style.display = "none";
+
+        document.getElementById(
+          "screen-accueil"
+        ).style.display = "flex";
+
+        alert(
+          "Impossible de charger les données de la classe. Veuillez réessayer."
+        );
+      }
+    }
+  );
+
+
+// ============================================================
+//  CHANGEMENT DE CLASSE
+// ============================================================
+
+classSelect.addEventListener(
+  "change",
+  async (e) => {
+
+    const classe =
+      e.target.value;
+
+    if (!classe) {
+
+      applyClassSubjects([]);
+
       return;
     }
-  }
 
-  // Afficher l'écran app EN PREMIER
-  document.getElementById("screen-accueil").style.display = "none";
-  document.getElementById("screen-app").style.display     = "block";
 
-  // Remplir les selects cachés (pour les bindings)
-  classSelect.value = classe;
-  document.getElementById("input-term").value = trimestre;
-  if (date) document.getElementById("input-date").value = date;
+    const info =
+      classInfo[classe];
 
-  // Remplir les champs affichage lecture seule
-  document.getElementById("input-class-display").value = classe;
-  document.getElementById("input-term-display").value = trimestre;
-  document.getElementById("input-date-display").value = formatDate(date);
+    const requiresCode =
+      Boolean(info?.requiresCode);
 
-  // Forcer la mise à jour de l'aperçu (les events ne se déclenchent pas sur setValue)
-  setPreview("preview-title", `Conseil de classe ${classe || "—"}`);
-  setPreview("preview-term", trimestre || "—");
-  setPreview("header-date", formatDate(date));
 
-  await loadClasseData(classe);
-  activerSauvegardeAuto();
-});
+    // --------------------------------------------------------
+    // Demander le code si nécessaire
+    // --------------------------------------------------------
 
-// ============================================================
-//  CHANGEMENT DE CLASSE DANS LE FORMULAIRE
-// ============================================================
-classSelect.addEventListener("change", async (e) => {
-  const classe = e.target.value;
-  if (!classe) { applyClassSubjects([]); return; }
-  const codeRaw     = classCodes[classe];
-  const codeAttendu = (codeRaw && codeRaw.toString().trim() !== "") ? codeRaw.toString().trim() : null;
-  if (codeAttendu && sessionStorage.getItem(`access_${classe}`) !== "granted") {
-    const codeSaisi = prompt(`Accès sécurisé GIPE.\nVeuillez entrer le code pour la classe ${classe} :`);
-    if (codeSaisi === codeAttendu) {
-      sessionStorage.setItem(`access_${classe}`, "granted");
-    } else {
-      alert("Code incorrect !"); classSelect.value = ""; applyClassSubjects([]); return;
+    if (
+      requiresCode &&
+      !validatedClassCodes[classe]
+    ) {
+
+      const code =
+        prompt(
+          `Accès sécurisé GIPE.\nVeuillez entrer le code pour la classe ${classe} :`
+        );
+
+
+      if (code === null) {
+
+        classSelect.value = "";
+
+        applyClassSubjects([]);
+
+        return;
+      }
+
+
+      const codeSaisi =
+        code.trim();
+
+
+      const verification =
+        await verifierAccesClasse(
+          classe,
+          codeSaisi
+        );
+
+
+      if (!verification.ok) {
+
+        alert(
+          verification.error ||
+          "Code incorrect !"
+        );
+
+        classSelect.value = "";
+
+        applyClassSubjects([]);
+
+        return;
+      }
+
+
+      validatedClassCodes[classe] =
+        codeSaisi;
+    }
+
+
+    // --------------------------------------------------------
+    // Chargement
+    // --------------------------------------------------------
+
+    try {
+
+      await loadClasseData(
+        classe
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Erreur changement de classe :",
+        err
+      );
+
+      applyClassSubjects([]);
     }
   }
-  await loadClasseData(classe);
-});
+);
 
 // ============================================================
 //  BOUTONS
