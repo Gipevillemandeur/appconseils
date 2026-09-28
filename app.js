@@ -1754,7 +1754,7 @@ async function generatePDF(apercuSeulement = false) {
     // Retourner un Blob pour l'afficher dans l'iframe
     return doc.output("blob");
   } else {
-    // Envoyer au GIPE via Google Apps Script
+    // Envoyer automatiquement le PDF au GIPE via le Dashboard
     await envoyerAuGIPE(doc, classe, trimestre, formatDate(document.getElementById("input-date").value), nomFichier);
     effacerSauvegarde();
   }
