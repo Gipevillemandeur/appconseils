@@ -1763,125 +1763,161 @@ async function generatePDF(apercuSeulement = false) {
 // ============================================================
 //  ENVOI AU GIPE
 // ============================================================
-const GIPE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE-vzGYC1vkDfs8PeUK7Y-Vzx8HvMOqXWtT_aYejBsz1VNqB2zcvbwDrkDCI7p2DxPDQ/exec";
-
-// Détecter si on est sur mobile
-function estMobile() {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
 
 async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
-  // Télécharger le PDF sur l'appareil (toujours, desktop et mobile)
+  // Télécharger le PDF sur l'appareil
+  // (PC et mobile)
   doc.save(nomFichier + ".pdf");
 
   // Afficher overlay
   const overlay = document.createElement("div");
   overlay.id = "envoi-overlay";
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50000;display:flex;align-items:center;justify-content:center;";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
-      <div id="envoi-icone" style="font-size:40px;margin-bottom:12px;">⏳</div>
-      <div id="envoi-titre" style="font-size:17px;font-weight:800;color:#1b1f24;margin-bottom:8px;">Envoi en cours...</div>
-      <div id="envoi-message" style="font-size:13px;color:#5d6b7b;line-height:1.5;"></div>
-      <div id="envoi-action" style="margin-top:16px;"></div>
+    <div style="
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 28px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    ">
+      <div id="envoi-icone" style="
+        font-size: 40px;
+        margin-bottom: 12px;
+      ">⏳</div>
+
+      <div id="envoi-titre" style="
+        font-size: 17px;
+        font-weight: 800;
+        color: #1b1f24;
+        margin-bottom: 8px;
+      ">
+        Envoi en cours...
+      </div>
+
+      <div id="envoi-message" style="
+        font-size: 13px;
+        color: #5d6b7b;
+        line-height: 1.5;
+      ">
+        Le compte rendu est en cours d'envoi au GIPE...
+      </div>
+
+      <div id="envoi-action" style="
+        margin-top: 16px;
+      "></div>
     </div>
   `;
+
   document.body.appendChild(overlay);
 
-  if (estMobile()) {
-    // Sur mobile : PDF téléchargé + ouvrir l'appli mail pré-remplie
-    const sujet    = encodeURIComponent(`Compte rendu conseil de classe - ${classe} - ${trimestre}${date ? " - " + date : ""}`);
-    const corps    = encodeURIComponent(`Bonjour,
+  try {
+    // ========================================================
+    // Préparer le PDF en Base64
+    // ========================================================
+    const pdfBase64 = doc
+      .output("datauristring")
+      .split(",")[1];
 
-Veuillez trouver ci-joint le compte rendu du conseil de classe ${classe} pour le ${trimestre}${date ? " du " + date : ""}.
-
-Ce document a été généré automatiquement par l'application de compte rendu des parents délégués.
-
-Cordialement,
-Les parents délégués`);
-    const mailtoUrl = `mailto:contact@gipevillemandeur.com?subject=${sujet}&body=${corps}`;
-
-    document.getElementById("envoi-icone").textContent = "📱";
-    document.getElementById("envoi-titre").textContent = "PDF téléchargé !";
-    document.getElementById("envoi-message").innerHTML = `Le PDF a été sauvegardé sur votre appareil.<br><br>
-      <strong>Pour l'envoyer au GIPE :</strong><br>
-      1️⃣ Cliquez sur le bouton ci-dessous pour ouvrir votre messagerie<br>
-      2️⃣ Joignez le PDF que vous venez de télécharger<br>
-      3️⃣ Envoyez !`;
-    document.getElementById("envoi-action").innerHTML = `
-      <a href="${mailtoUrl}" style="display:inline-block;background:#1f6f8b;color:#fff;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px;">
-        📧 Ouvrir ma messagerie
-      </a>`;
-
-    setTimeout(() => {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }, 15000);
-
-  } else {
-    // Sur desktop : envoi automatique via Google Apps Script
-    try {
-      const pdfBase64 = doc.output("datauristring").split(",")[1];
-
-      fetch(GIPE_SCRIPT_URL, {
+    // ========================================================
+    // Envoyer au Dashboard GIPE
+    // ========================================================
+    const response = await fetch(
+      "https://admin.gipevillemandeur.com/api/conseils/send-pdf",
+      {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdf: pdfBase64, classe, trimestre, date })
-      }).catch(err => console.warn("Envoi GIPE:", err));
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          pdfBase64: pdfBase64,
+          filename: nomFichier + ".pdf",
+          classe: classe,
+          trimestre: trimestre
+        })
+      }
+    );
 
-      document.getElementById("envoi-icone").textContent = "✅";
-      document.getElementById("envoi-titre").textContent = "PDF téléchargé et envoyé au GIPE !";
-      document.getElementById("envoi-message").textContent = `Le PDF a été sauvegardé sur votre appareil et envoyé automatiquement à contact@gipevillemandeur.com`;
-    } catch (err) {
-      console.error("Erreur envoi GIPE:", err);
-      document.getElementById("envoi-icone").textContent = "⚠️";
-      document.getElementById("envoi-titre").textContent = "Attention";
-      document.getElementById("envoi-message").innerHTML = `Le PDF a été sauvegardé sur votre appareil mais l'envoi automatique a échoué. Veuillez l'envoyer manuellement à contact@gipevillemandeur.com`;
-    } finally {
-      setTimeout(() => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      }, 4000);
+    // Vérifier que le serveur a bien répondu en JSON
+    const result = await response.json();
+
+    // Vérifier le résultat de l'envoi
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "Erreur lors de l'envoi du PDF."
+      );
     }
+
+    // ========================================================
+    // ENVOI RÉUSSI
+    // ========================================================
+    document.getElementById("envoi-icone").textContent = "✅";
+
+    document.getElementById("envoi-titre").textContent =
+      "PDF envoyé au GIPE !";
+
+    document.getElementById("envoi-message").innerHTML = `
+      Le PDF a bien été sauvegardé sur votre appareil
+      et envoyé automatiquement à
+      <strong>contact@gipevillemandeur.com</strong>.
+    `;
+
+    // Fermer automatiquement après 5 secondes
+    setTimeout(() => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    }, 5000);
+
+  } catch (err) {
+
+    // ========================================================
+    // ERREUR D'ENVOI
+    // ========================================================
+    console.error("Erreur envoi GIPE :", err);
+
+    document.getElementById("envoi-icone").textContent = "⚠️";
+
+    document.getElementById("envoi-titre").textContent =
+      "Envoi automatique échoué";
+
+    document.getElementById("envoi-message").innerHTML = `
+      Le PDF a bien été sauvegardé sur votre appareil,
+      mais l'envoi automatique au GIPE a échoué.<br><br>
+      Vous pouvez réessayer.
+    `;
+
+    document.getElementById("envoi-action").innerHTML = `
+      <button
+        onclick="location.reload()"
+        style="
+          background: #1f6f8b;
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          padding: 12px 20px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+        "
+      >
+        Fermer
+      </button>
+    `;
+
   }
 }
-
-document.getElementById("listing-eleves").addEventListener("click", () => {
-  const classe = classSelect.value;
-
-  if (!classe) {
-    alert("Sélectionnez une classe");
-    return;
-  }
-
-  const code = validatedClassCodes[classe] || "";
-
-  // Une classe sans code validé ne peut pas ouvrir le listing.
-  if (!code) {
-    alert("Accès refusé : le code de la classe n'a pas été validé.");
-    return;
-  }
-
-  const trimestre =
-    document.getElementById("input-term").value;
-
-  const date =
-    document.getElementById("input-date").value;
-
-  const url =
-    `listing-eleves.html` +
-    `?classe=${encodeURIComponent(classe)}` +
-    `&code=${encodeURIComponent(code)}` +
-    `&trimestre=${encodeURIComponent(trimestre)}` +
-    `&date=${encodeURIComponent(date)}`;
-
-  window.open(url, "_blank");
-});
-
-loadSampleBtn.addEventListener("click", () => {
-  const classe = classSelect.value;
-  if (classe) loadClasseData(classe);
-});
-
 // ============================================================
 //  MODALE AIDE
 // ============================================================
