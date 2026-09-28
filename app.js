@@ -1765,11 +1765,10 @@ async function generatePDF(apercuSeulement = false) {
 // ============================================================
 
 async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
-  // Télécharger le PDF sur l'appareil
-  // (PC et mobile)
-  doc.save(nomFichier + ".pdf");
 
-  // Afficher overlay
+  // ==========================================================
+  // Afficher l'overlay immédiatement
+  // ==========================================================
   const overlay = document.createElement("div");
   overlay.id = "envoi-overlay";
   overlay.style.cssText = `
@@ -1803,7 +1802,7 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
         color: #1b1f24;
         margin-bottom: 8px;
       ">
-        Envoi en cours...
+        Préparation de l'envoi...
       </div>
 
       <div id="envoi-message" style="
@@ -1823,9 +1822,13 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
   document.body.appendChild(overlay);
 
   try {
+
     // ========================================================
     // Préparer le PDF en Base64
     // ========================================================
+    document.getElementById("envoi-titre").textContent =
+      "Envoi du PDF en cours...";
+
     const pdfBase64 = doc
       .output("datauristring")
       .split(",")[1];
@@ -1849,10 +1852,19 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
       }
     );
 
-    // Vérifier que le serveur a bien répondu en JSON
-    const result = await response.json();
+    // ========================================================
+    // Vérifier la réponse du serveur
+    // ========================================================
+    let result;
 
-    // Vérifier le résultat de l'envoi
+    try {
+      result = await response.json();
+    } catch (jsonError) {
+      throw new Error(
+        "Le serveur a répondu, mais sa réponse est invalide."
+      );
+    }
+
     if (!response.ok || !result.success) {
       throw new Error(
         result.error || "Erreur lors de l'envoi du PDF."
@@ -1862,29 +1874,61 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
     // ========================================================
     // ENVOI RÉUSSI
     // ========================================================
+
     document.getElementById("envoi-icone").textContent = "✅";
 
     document.getElementById("envoi-titre").textContent =
       "PDF envoyé au GIPE !";
 
     document.getElementById("envoi-message").innerHTML = `
-      Le PDF a bien été sauvegardé sur votre appareil
-      et envoyé automatiquement à
-      <strong>contact@gipevillemandeur.com</strong>.
+      Le compte rendu a bien été envoyé automatiquement
+      à <strong>contact@gipevillemandeur.com</strong>.<br><br>
+      Préparation du téléchargement...
     `;
 
-    // Fermer automatiquement après 5 secondes
+    // ========================================================
+    // Télécharger le PDF seulement APRÈS l'envoi
+    // ========================================================
+
+    setTimeout(() => {
+
+      try {
+        doc.save(nomFichier + ".pdf");
+
+        document.getElementById("envoi-message").innerHTML = `
+          Le PDF a été envoyé automatiquement au GIPE
+          et sauvegardé sur votre appareil.
+        `;
+
+      } catch (downloadError) {
+
+        console.error(
+          "Erreur téléchargement PDF :",
+          downloadError
+        );
+
+        document.getElementById("envoi-message").innerHTML = `
+          Le PDF a bien été envoyé au GIPE.<br><br>
+          Le téléchargement sur votre appareil
+          n'a pas pu être effectué automatiquement.
+        `;
+      }
+
+    }, 300);
+
+    // Fermer l'overlay après quelques secondes
     setTimeout(() => {
       if (overlay.parentNode) {
         overlay.parentNode.removeChild(overlay);
       }
-    }, 5000);
+    }, 5500);
 
   } catch (err) {
 
     // ========================================================
     // ERREUR D'ENVOI
     // ========================================================
+
     console.error("Erreur envoi GIPE :", err);
 
     document.getElementById("envoi-icone").textContent = "⚠️";
@@ -1893,9 +1937,13 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
       "Envoi automatique échoué";
 
     document.getElementById("envoi-message").innerHTML = `
-      Le PDF a bien été sauvegardé sur votre appareil,
-      mais l'envoi automatique au GIPE a échoué.<br><br>
-      Vous pouvez réessayer.
+      Le PDF n'a pas pu être envoyé automatiquement au GIPE.<br><br>
+      <small style="color:#777;">
+        ${err && err.message
+          ? err.message
+          : "Erreur de communication avec le serveur."
+        }
+      </small>
     `;
 
     document.getElementById("envoi-action").innerHTML = `
@@ -1915,7 +1963,6 @@ async function envoyerAuGIPE(doc, classe, trimestre, date, nomFichier) {
         Fermer
       </button>
     `;
-
   }
 }
 // ============================================================
